@@ -12,3 +12,5 @@ Framework de infraestructura especializado en la protección de servicios contra
 - **Monitoreo:** Angela Olivares
 - **Pentesting:** [Nombre Integrante 4]
 - **Hardening:** [Nombre Integrante 5]
+
+🚀 Conexión con Discord establecida.
