@@ -1,0 +1,9 @@
+# Logs y archivos temporales
+logs/
+*.log
+__pycache__/
+.uv/
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
