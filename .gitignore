@@ -3,6 +3,7 @@ logs/
 *.log
 __pycache__/
 .uv/
+certs/
 
 # Archivos de sistema
 .DS_Store
