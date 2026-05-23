@@ -1,0 +1,79 @@
+# ══════════════════════════════════════════════════════════════════════════════
+# BIOMETRIC GHOST GATE (BGG) — AQ Tech
+# docker-compose.yml — Banking Login Simulator
+# Versión de Compose: sintaxis moderna (sin campo 'version' obsoleto)
+# ══════════════════════════════════════════════════════════════════════════════
+
+services:
+
+  bgg-simulator:
+    # ── Imagen ────────────────────────────────────────────────────────────
+    build:
+      context: .
+      dockerfile: Dockerfile
+      # Cache de build por stage para iteraciones rápidas
+      target: runtime
+
+    container_name: bgg-banking-simulator
+
+    # ── Red y puertos ─────────────────────────────────────────────────────
+    # Expone solo en localhost de la VM (0.0.0.0:8000).
+    # Si el equipo de eBPF necesita aislar la interfaz, cambiar a 127.0.0.1:8000
+    ports:
+      - "0.0.0.0:8000:8000"
+
+    # ── Política de reinicio ───────────────────────────────────────────────
+    # unless-stopped: reinicia tras crash o reboot de VM,
+    # pero respeta un `docker compose stop` manual.
+    restart: unless-stopped
+
+    # ── Volúmenes ─────────────────────────────────────────────────────────
+    # Monta la carpeta de logs del contenedor en el host de la VM.
+    # El script de Housekeeping y las herramientas eBPF leen desde:
+    #   HOST  : ./logs/active/bgg_operativo.log
+    #   CONTAINER: /app/logs/active/bgg_operativo.log
+    volumes:
+      - type: bind
+        source: ./logs/active          # ruta relativa en la VM (se crea automáticamente)
+        target: /app/logs/active
+
+    # ── Variables de entorno ──────────────────────────────────────────────
+    environment:
+      - PYTHONUNBUFFERED=1
+      - TZ=UTC                         # forzar zona horaria UTC en el contenedor
+
+    # ── Recursos (opcional pero recomendado para sandbox controlado) ───────
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"                  # máximo 1 vCPU
+          memory: 256M                 # máximo 256 MB RAM
+        reservations:
+          cpus: "0.25"
+          memory: 64M
+
+    # ── Healthcheck (complementa el HEALTHCHECK del Dockerfile) ───────────
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request; urllib.request.urlopen('http://localhost:8000/')"]
+      interval: 30s
+      timeout: 5s
+      start_period: 15s
+      retries: 3
+
+    # ── Logging de Docker (stdout del contenedor) ─────────────────────────
+    # json-file con rotación para no saturar el disco de la VM.
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+        tag: "bgg-simulator"
+
+# ── Red personalizada (aislamiento) ───────────────────────────────────────────
+# Permite añadir futuros servicios (ej. Redis, mock-db) en la misma red interna
+# sin exponerlos al exterior.
+networks:
+  default:
+    name: bgg-network
+    driver: bridge
