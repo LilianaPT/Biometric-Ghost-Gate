@@ -8,3 +8,11 @@ certs/
 # Archivos de sistema
 .DS_Store
 Thumbs.db
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# VS Code
+.vscode/

@@ -1,1 +1,13 @@
+# ══════════════════════════════════════════════════════════════════════════
+# BGG Banking Simulator — Dependencias Python
+# Pinned para builds reproducibles en la VM de Linux
+# ══════════════════════════════════════════════════════════════════════════
 
+# Framework ASGI de alto rendimiento
+fastapi==0.115.5
+
+# Servidor ASGI — producción-grade, compatible con Linux epoll
+uvicorn[standard]==0.32.1
+
+# Validación de datos (incluido en FastAPI, pin explícito para reproducibilidad)
+pydantic==2.10.3
