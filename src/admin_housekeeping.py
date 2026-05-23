@@ -49,8 +49,15 @@ CERTS_DIR = BASE_DIR / "certs"
 AUDIT_TRAIL_FILE = BASE_DIR / "audit_trail.log"
 
 # Umbral de antigüedad para rotación de logs (en segundos)
-# Ejemplo: 30 segundos para pruebas; en producción usar 86400 (24h) o más.
-LOG_ROTATION_THRESHOLD_SECONDS = 30
+# LFPDPPP Art. 37: retención mínima de 10 años para datos personales.
+# 10 años = 365 días × 10 × 24h × 60m × 60s = 315,360,000 segundos.
+LOG_ROTATION_THRESHOLD_SECONDS = 315_360_000  # 10 años — cumplimiento LFPDPPP
+ 
+# Retención mínima obligatoria en archivo (no borrar antes de esta fecha)
+# Misma base legal: LFPDPPP Art. 37 — los archivos en logs/archive
+# NO pueden eliminarse hasta cumplir este período desde su creación.
+RETENCION_MINIMA_SEGUNDOS = 315_360_000  # 10 años — cumplimiento LFPDPPP
+
 
 # Identificador del sistema para trazabilidad
 SYSTEM_ID = "BGG-HOUSEKEEPING-v1.0"
@@ -358,11 +365,17 @@ def limpiar_logs_activos(
                     # shutil.move: mueve el archivo Y elimina el original automáticamente
                     shutil.move(str(archivo), str(destino))
 
+                    #Calcular fecha exacta de vencimiento para cumplimiento LFPDPPP
+                    # El archivo NO puede borrarse antes de esta fecha (Art. 37 LFPDPPP - retención mínima de 10 años).
+                    fecha_vencimiento = datetime.fromtimestamp(
+                        tiempo_modificacion + RETENCION_MINIMA_SEGUNDOS,
+                          tz=timezone.utc
+                          ).isoformat()
+
                     resumen["archivados"] += 1
                     logger.info(
-                        f"HOUSEKEEPING | ARCHIVADO: {archivo.name} -> "
-                        f"logs/archive/{nombre_destino} "
-                        f"(antigüedad: {antiguedad_segundos:.1f}s)"
+                        f"HOUSEKEEPING | RETENCIÓN LFPDPPP Art.37: {nombre_destino} "
+                        f"conservar hasta: {fecha_vencimiento}"
                     )
                 else:
                     logger.debug(
