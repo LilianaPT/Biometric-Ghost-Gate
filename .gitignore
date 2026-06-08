@@ -1,6 +1,5 @@
 # Logs y archivos temporales
 logs/
-*.log
 __pycache__/
 .uv/
 certs/
