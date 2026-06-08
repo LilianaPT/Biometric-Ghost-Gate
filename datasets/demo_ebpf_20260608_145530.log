@@ -1,0 +1,560 @@
+=== DEMO eBPF BGG Banking Simulator - lun 08 jun 2026 11:42:04 CST ===
+2026-06-08T17:38:09 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    1.64ms
+2026-06-08T17:38:40 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.35ms
+2026-06-08T17:39:10 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.33ms
+2026-06-08T17:39:41 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.68ms
+2026-06-08T17:40:11 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.27ms
+2026-06-08T17:40:42 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    5.24ms
+2026-06-08T17:41:12 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    1.65ms
+2026-06-08T17:41:43 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    3.38ms
+2026-06-08T17:42:13 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    5.30ms
+2026-06-08T17:42:44 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    2.08ms
+2026-06-08T17:43:15 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.68ms
+2026-06-08T17:43:45 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    3.82ms
+2026-06-08T17:44:16 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.70ms
+2026-06-08T17:44:44 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.8596s
+2026-06-08T17:44:44 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T17:44:44 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency= 1413.61ms
+2026-06-08T17:44:46 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.86ms
+2026-06-08T17:44:47 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.3715s
+2026-06-08T17:44:47 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T17:44:47 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  374.08ms
+2026-06-08T17:44:50 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.6654s
+2026-06-08T17:44:50 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T17:44:50 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  668.07ms
+2026-06-08T17:44:52 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.4983s
+2026-06-08T17:44:52 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T17:44:52 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  502.37ms
+2026-06-08T17:44:55 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.9747s
+2026-06-08T17:44:55 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T17:44:55 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  986.08ms
+2026-06-08T17:44:58 UTC | INFO     | AUTH     | user=cliente_001          network_delay=1.1044s
+2026-06-08T17:44:58 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T17:44:58 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency= 1107.23ms
+2026-06-08T17:45:02 UTC | INFO     | AUTH     | user=cliente_001          network_delay=1.0394s
+2026-06-08T17:45:02 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T17:45:02 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency= 1048.21ms
+2026-06-08T17:45:04 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.5496s
+2026-06-08T17:45:04 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T17:45:04 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  551.67ms
+2026-06-08T17:45:07 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.7296s
+2026-06-08T17:45:07 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T17:45:07 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  733.25ms
+2026-06-08T17:45:10 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.8367s
+2026-06-08T17:45:10 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T17:45:10 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  844.58ms
+2026-06-08T17:45:17 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.32ms
+2026-06-08T17:45:47 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.58ms
+2026-06-08T17:46:18 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.51ms
+2026-06-08T17:46:49 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.30ms
+2026-06-08T17:47:19 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.68ms
+2026-06-08T17:47:50 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    3.95ms
+2026-06-08T17:48:21 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.38ms
+2026-06-08T17:48:52 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.62ms
+2026-06-08T19:28:12 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.29ms
+2026-06-08T19:28:42 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.44ms
+2026-06-08T19:29:13 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.48ms
+2026-06-08T19:29:43 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    4.75ms
+2026-06-08T19:30:14 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.34ms
+2026-06-08T19:30:44 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.49ms
+2026-06-08T19:31:15 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.33ms
+2026-06-08T19:31:45 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.61ms
+2026-06-08T19:32:16 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.31ms
+2026-06-08T19:32:46 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.28ms
+2026-06-08T19:33:17 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.61ms
+2026-06-08T19:33:48 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.71ms
+2026-06-08T19:34:18 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.28ms
+2026-06-08T19:34:24 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.1192s
+2026-06-08T19:34:24 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T19:34:24 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  142.27ms
+2026-06-08T19:34:28 UTC | INFO     | AUTH     | user=cliente_001          network_delay=1.0312s
+2026-06-08T19:34:28 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T19:34:28 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency= 1035.41ms
+2026-06-08T19:34:31 UTC | INFO     | AUTH     | user=cliente_001          network_delay=1.0480s
+2026-06-08T19:34:31 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T19:34:31 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency= 1056.24ms
+2026-06-08T19:34:33 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.7041s
+2026-06-08T19:34:33 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T19:34:33 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  711.82ms
+2026-06-08T19:34:37 UTC | INFO     | AUTH     | user=cliente_001          network_delay=1.2066s
+2026-06-08T19:34:37 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T19:34:37 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency= 1218.18ms
+2026-06-08T19:34:40 UTC | INFO     | AUTH     | user=cliente_001          network_delay=1.3630s
+2026-06-08T19:34:40 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T19:34:40 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency= 1370.49ms
+2026-06-08T19:34:45 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.3145s
+2026-06-08T19:34:45 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T19:34:45 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency= 2360.28ms
+2026-06-08T19:34:48 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.9824s
+2026-06-08T19:34:48 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T19:34:48 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  988.89ms
+2026-06-08T19:34:49 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.75ms
+2026-06-08T19:34:50 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.2801s
+2026-06-08T19:34:50 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T19:34:50 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  290.92ms
+2026-06-08T19:34:53 UTC | INFO     | AUTH     | user=cliente_001          network_delay=1.1272s
+2026-06-08T19:34:53 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T19:34:53 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency= 1130.44ms
+2026-06-08T19:35:19 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.40ms
+2026-06-08T19:35:50 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.31ms
+2026-06-08T19:36:20 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.30ms
+2026-06-08T19:36:51 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.47ms
+2026-06-08T19:37:02 UTC | INFO     | AUTH     | user=cliente_001          network_delay=1.4508s
+2026-06-08T19:37:02 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T19:37:02 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency= 1456.56ms
+2026-06-08T19:37:03 UTC | INFO     | AUTH     | user=cliente_001          network_delay=1.4409s
+2026-06-08T19:37:03 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T19:37:03 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency= 1449.30ms
+2026-06-08T19:37:05 UTC | INFO     | AUTH     | user=cliente_001          network_delay=1.3375s
+2026-06-08T19:37:05 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T19:37:05 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency= 1341.26ms
+2026-06-08T19:37:06 UTC | INFO     | AUTH     | user=cliente_001          network_delay=1.0812s
+2026-06-08T19:37:06 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T19:37:06 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency= 1087.85ms
+2026-06-08T19:37:07 UTC | INFO     | AUTH     | user=cliente_001          network_delay=1.3044s
+2026-06-08T19:37:07 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T19:37:07 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency= 1310.69ms
+2026-06-08T19:37:08 UTC | INFO     | AUTH     | user=cliente_001          network_delay=1.1117s
+2026-06-08T19:37:08 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T19:37:08 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency= 1129.27ms
+2026-06-08T19:37:09 UTC | INFO     | AUTH     | user=cliente_001          network_delay=1.2037s
+2026-06-08T19:37:09 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T19:37:09 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency= 1214.02ms
+2026-06-08T19:37:11 UTC | INFO     | AUTH     | user=cliente_001          network_delay=1.2245s
+2026-06-08T19:37:11 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T19:37:11 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency= 1242.95ms
+2026-06-08T19:37:11 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.5350s
+2026-06-08T19:37:11 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T19:37:11 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  540.30ms
+2026-06-08T19:37:12 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.6981s
+2026-06-08T19:37:12 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T19:37:12 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  707.30ms
+2026-06-08T19:37:12 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.1329s
+2026-06-08T19:37:12 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T19:37:12 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  144.20ms
+2026-06-08T19:37:13 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.4105s
+2026-06-08T19:37:13 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T19:37:13 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  419.83ms
+2026-06-08T19:37:14 UTC | INFO     | AUTH     | user=cliente_001          network_delay=1.0238s
+2026-06-08T19:37:14 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T19:37:14 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency= 1029.48ms
+2026-06-08T19:37:14 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.1209s
+2026-06-08T19:37:14 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T19:37:14 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  129.56ms
+2026-06-08T19:37:15 UTC | INFO     | AUTH     | user=cliente_001          network_delay=1.3809s
+2026-06-08T19:37:15 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T19:37:15 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency= 1386.23ms
+2026-06-08T19:37:17 UTC | INFO     | AUTH     | user=cliente_001          network_delay=1.3242s
+2026-06-08T19:37:17 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T19:37:17 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency= 1335.30ms
+2026-06-08T19:37:17 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.3502s
+2026-06-08T19:37:17 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T19:37:17 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  372.47ms
+2026-06-08T19:37:17 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.3962s
+2026-06-08T19:37:17 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T19:37:17 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  402.62ms
+2026-06-08T19:37:18 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.6264s
+2026-06-08T19:37:18 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T19:37:18 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  645.75ms
+2026-06-08T19:37:19 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.6295s
+2026-06-08T19:37:19 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T19:37:19 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  638.45ms
+2026-06-08T19:37:20 UTC | INFO     | AUTH     | user=cliente_001          network_delay=1.3588s
+2026-06-08T19:37:20 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T19:37:20 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency= 1369.95ms
+2026-06-08T19:37:21 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.5612s
+2026-06-08T19:37:21 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T19:37:21 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  577.57ms
+2026-06-08T19:37:22 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.79ms
+2026-06-08T19:37:22 UTC | INFO     | AUTH     | user=cliente_001          network_delay=1.4291s
+2026-06-08T19:37:22 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T19:37:22 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency= 1435.22ms
+2026-06-08T19:37:23 UTC | INFO     | AUTH     | user=cliente_001          network_delay=1.1019s
+2026-06-08T19:37:23 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T19:37:23 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency= 1106.01ms
+2026-06-08T19:37:24 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.5625s
+2026-06-08T19:37:24 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T19:37:24 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  573.14ms
+2026-06-08T19:37:25 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.8156s
+2026-06-08T19:37:25 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T19:37:25 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  831.26ms
+2026-06-08T19:37:26 UTC | INFO     | AUTH     | user=cliente_001          network_delay=1.2630s
+2026-06-08T19:37:26 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T19:37:26 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency= 1271.11ms
+2026-06-08T19:37:27 UTC | INFO     | AUTH     | user=cliente_001          network_delay=1.2886s
+2026-06-08T19:37:27 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T19:37:27 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency= 1295.17ms
+2026-06-08T19:37:29 UTC | INFO     | AUTH     | user=cliente_001          network_delay=1.0220s
+2026-06-08T19:37:29 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T19:37:29 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency= 1026.35ms
+2026-06-08T19:37:30 UTC | INFO     | AUTH     | user=cliente_001          network_delay=1.0246s
+2026-06-08T19:37:30 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T19:37:30 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency= 1039.34ms
+2026-06-08T19:37:52 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.60ms
+2026-06-08T19:38:23 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.30ms
+2026-06-08T19:38:53 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.39ms
+2026-06-08T19:39:24 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.31ms
+2026-06-08T19:39:54 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.83ms
+2026-06-08T19:40:24 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.31ms
+2026-06-08T19:40:55 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.31ms
+2026-06-08T19:41:26 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.79ms
+2026-06-08T19:41:56 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    2.86ms
+2026-06-08T19:42:27 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.52ms
+2026-06-08T19:42:58 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    2.76ms
+2026-06-08T19:43:28 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.37ms
+2026-06-08T19:43:59 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.45ms
+2026-06-08T19:44:29 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.29ms
+2026-06-08T19:45:00 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    7.05ms
+2026-06-08T19:45:31 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.60ms
+2026-06-08T19:46:01 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.33ms
+2026-06-08T19:46:32 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    3.44ms
+2026-06-08T19:47:03 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.38ms
+2026-06-08T19:47:33 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.40ms
+2026-06-08T20:00:22 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.54ms
+2026-06-08T20:00:52 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.32ms
+2026-06-08T20:01:23 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.38ms
+2026-06-08T20:01:54 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.39ms
+2026-06-08T20:02:24 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.51ms
+2026-06-08T20:02:55 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.34ms
+2026-06-08T20:03:25 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.76ms
+2026-06-08T20:03:56 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.39ms
+2026-06-08T20:04:26 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    1.06ms
+2026-06-08T20:04:57 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.59ms
+2026-06-08T20:05:28 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.36ms
+2026-06-08T20:05:58 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.35ms
+2026-06-08T20:06:28 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.29ms
+2026-06-08T20:06:59 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    6.16ms
+2026-06-08T20:07:30 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.32ms
+2026-06-08T20:08:00 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.64ms
+2026-06-08T20:08:31 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    1.96ms
+2026-06-08T20:09:01 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    1.38ms
+2026-06-08T20:09:32 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    2.65ms
+2026-06-08T20:10:03 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.48ms
+2026-06-08T20:10:34 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.38ms
+2026-06-08T20:11:04 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.60ms
+2026-06-08T20:11:35 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.44ms
+2026-06-08T20:12:05 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.37ms
+2026-06-08T20:12:36 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.30ms
+2026-06-08T20:13:07 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.42ms
+2026-06-08T20:13:37 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=   10.90ms
+2026-06-08T20:14:08 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.48ms
+2026-06-08T20:14:39 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.88ms
+2026-06-08T20:15:09 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.88ms
+2026-06-08T20:15:40 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.38ms
+2026-06-08T20:16:10 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.31ms
+2026-06-08T20:16:41 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.54ms
+2026-06-08T20:17:11 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.30ms
+2026-06-08T20:17:42 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.30ms
+2026-06-08T20:18:12 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.41ms
+2026-06-08T20:18:43 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.33ms
+2026-06-08T20:19:13 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.54ms
+2026-06-08T20:19:44 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.36ms
+2026-06-08T20:20:14 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.33ms
+2026-06-08T20:20:45 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.30ms
+2026-06-08T20:21:16 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.48ms
+2026-06-08T20:21:47 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.33ms
+2026-06-08T20:22:17 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.59ms
+2026-06-08T20:22:48 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.57ms
+2026-06-08T20:23:19 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.34ms
+2026-06-08T20:23:49 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=   58.49ms
+2026-06-08T20:24:20 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.95ms
+2026-06-08T20:24:51 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    3.38ms
+2026-06-08T20:25:22 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.34ms
+2026-06-08T20:25:53 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.51ms
+2026-06-08T20:26:23 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    1.19ms
+2026-06-08T20:26:55 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    1.72ms
+2026-06-08T20:27:25 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    3.81ms
+2026-06-08T20:27:56 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.61ms
+2026-06-08T20:28:27 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    3.19ms
+2026-06-08T20:28:57 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    3.99ms
+2026-06-08T20:29:28 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    2.49ms
+2026-06-08T20:29:59 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.31ms
+2026-06-08T20:30:29 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.79ms
+2026-06-08T20:31:00 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.75ms
+2026-06-08T20:31:31 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    9.47ms
+2026-06-08T20:32:02 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    2.62ms
+2026-06-08T20:32:32 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.98ms
+2026-06-08T20:33:03 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    2.56ms
+2026-06-08T20:33:33 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    1.31ms
+2026-06-08T20:34:04 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.44ms
+2026-06-08T20:34:35 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    1.20ms
+2026-06-08T20:35:06 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=   12.82ms
+2026-06-08T20:35:36 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.85ms
+2026-06-08T20:36:07 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.80ms
+2026-06-08T20:36:38 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.87ms
+2026-06-08T20:37:08 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.69ms
+2026-06-08T20:37:39 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    3.14ms
+2026-06-08T20:38:10 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.43ms
+2026-06-08T20:38:40 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.43ms
+2026-06-08T20:39:11 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.43ms
+2026-06-08T20:39:36 UTC | INFO     | AUTH     | user=cliente_001          network_delay=1.4817s
+2026-06-08T20:39:36 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:39:36 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency= 1508.59ms
+2026-06-08T20:39:39 UTC | INFO     | AUTH     | user=cliente_001          network_delay=1.2749s
+2026-06-08T20:39:39 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:39:39 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency= 1292.99ms
+2026-06-08T20:39:42 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    3.10ms
+2026-06-08T20:39:43 UTC | INFO     | AUTH     | user=cliente_001          network_delay=1.0188s
+2026-06-08T20:39:43 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:39:43 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency= 1041.53ms
+2026-06-08T20:39:46 UTC | INFO     | AUTH     | user=cliente_001          network_delay=1.1042s
+2026-06-08T20:39:46 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:39:46 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency= 1124.82ms
+2026-06-08T20:39:48 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.1803s
+2026-06-08T20:39:48 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:39:48 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  194.53ms
+2026-06-08T20:39:52 UTC | INFO     | AUTH     | user=cliente_001          network_delay=1.3033s
+2026-06-08T20:39:52 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:39:52 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency= 1320.80ms
+2026-06-08T20:39:55 UTC | INFO     | AUTH     | user=cliente_001          network_delay=1.2724s
+2026-06-08T20:39:55 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:39:55 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency= 1277.32ms
+2026-06-08T20:39:58 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.4450s
+2026-06-08T20:39:58 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:39:58 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  457.90ms
+2026-06-08T20:40:01 UTC | INFO     | AUTH     | user=cliente_001          network_delay=1.3415s
+2026-06-08T20:40:01 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:40:01 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency= 1360.23ms
+2026-06-08T20:40:04 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.5247s
+2026-06-08T20:40:04 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:40:04 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  533.23ms
+2026-06-08T20:40:12 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    1.96ms
+2026-06-08T20:40:43 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    1.01ms
+2026-06-08T20:41:14 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.31ms
+2026-06-08T20:41:44 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.73ms
+2026-06-08T20:42:15 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    1.09ms
+2026-06-08T20:42:46 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    7.41ms
+2026-06-08T20:43:16 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.40ms
+2026-06-08T20:43:47 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    2.75ms
+2026-06-08T20:44:10 UTC | INFO     | AUTH     | user=cliente_001          network_delay=1.0941s
+2026-06-08T20:44:10 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:44:10 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency= 1096.73ms
+2026-06-08T20:44:13 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.6975s
+2026-06-08T20:44:13 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:44:13 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  709.78ms
+2026-06-08T20:44:16 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.4916s
+2026-06-08T20:44:16 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:44:16 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  503.29ms
+2026-06-08T20:44:17 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.34ms
+2026-06-08T20:44:19 UTC | INFO     | AUTH     | user=cliente_001          network_delay=1.3952s
+2026-06-08T20:44:19 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:44:19 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency= 1410.05ms
+2026-06-08T20:44:22 UTC | INFO     | AUTH     | user=cliente_001          network_delay=1.1603s
+2026-06-08T20:44:22 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:44:22 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency= 1172.97ms
+2026-06-08T20:44:25 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.6488s
+2026-06-08T20:44:25 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:44:25 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  659.67ms
+2026-06-08T20:44:28 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.2841s
+2026-06-08T20:44:28 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:44:28 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  301.03ms
+2026-06-08T20:44:30 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.5944s
+2026-06-08T20:44:30 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:44:30 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  603.61ms
+2026-06-08T20:44:33 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.2280s
+2026-06-08T20:44:33 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:44:33 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  246.08ms
+2026-06-08T20:44:35 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.2157s
+2026-06-08T20:44:35 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:44:35 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  228.29ms
+2026-06-08T20:44:48 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    1.87ms
+2026-06-08T20:45:19 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    1.56ms
+2026-06-08T20:45:49 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.45ms
+2026-06-08T20:46:20 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.71ms
+2026-06-08T20:46:51 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.41ms
+2026-06-08T20:47:21 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    2.63ms
+2026-06-08T20:47:52 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.37ms
+2026-06-08T20:48:02 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.6810s
+2026-06-08T20:48:02 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:48:02 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  694.89ms
+2026-06-08T20:48:02 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.1989s
+2026-06-08T20:48:02 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:48:02 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  215.46ms
+2026-06-08T20:48:02 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.5709s
+2026-06-08T20:48:02 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:48:02 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  577.33ms
+2026-06-08T20:48:03 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.3004s
+2026-06-08T20:48:03 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:48:03 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  335.18ms
+2026-06-08T20:48:04 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.7139s
+2026-06-08T20:48:04 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:48:04 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  734.42ms
+2026-06-08T20:48:05 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.8969s
+2026-06-08T20:48:05 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:48:05 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  902.68ms
+2026-06-08T20:48:05 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.6334s
+2026-06-08T20:48:05 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:48:05 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  642.31ms
+2026-06-08T20:48:06 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.4922s
+2026-06-08T20:48:06 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:48:06 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  513.32ms
+2026-06-08T20:48:07 UTC | INFO     | AUTH     | user=cliente_001          network_delay=1.2871s
+2026-06-08T20:48:07 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:48:07 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency= 1304.65ms
+2026-06-08T20:48:08 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.9564s
+2026-06-08T20:48:08 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:48:08 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  974.72ms
+2026-06-08T20:48:10 UTC | INFO     | AUTH     | user=cliente_001          network_delay=1.2724s
+2026-06-08T20:48:10 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:48:10 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency= 1281.49ms
+2026-06-08T20:48:11 UTC | INFO     | AUTH     | user=cliente_001          network_delay=1.3442s
+2026-06-08T20:48:11 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:48:11 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency= 1350.36ms
+2026-06-08T20:48:12 UTC | INFO     | AUTH     | user=cliente_001          network_delay=1.4352s
+2026-06-08T20:48:12 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:48:12 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency= 1443.04ms
+2026-06-08T20:48:13 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.9742s
+2026-06-08T20:48:13 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:48:13 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  976.94ms
+2026-06-08T20:48:14 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.2890s
+2026-06-08T20:48:14 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:48:14 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  315.46ms
+2026-06-08T20:48:14 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.4266s
+2026-06-08T20:48:14 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:48:14 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  436.35ms
+2026-06-08T20:48:16 UTC | INFO     | AUTH     | user=cliente_001          network_delay=1.2994s
+2026-06-08T20:48:16 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:48:16 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency= 1328.07ms
+2026-06-08T20:48:16 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.3304s
+2026-06-08T20:48:16 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:48:16 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  345.52ms
+2026-06-08T20:48:16 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.4916s
+2026-06-08T20:48:17 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:48:17 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  497.99ms
+2026-06-08T20:48:18 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.9927s
+2026-06-08T20:48:18 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:48:18 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency= 1008.13ms
+2026-06-08T20:48:18 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.5713s
+2026-06-08T20:48:18 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:48:18 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  577.35ms
+2026-06-08T20:48:18 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.1099s
+2026-06-08T20:48:18 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:48:18 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  117.74ms
+2026-06-08T20:48:18 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.1327s
+2026-06-08T20:48:18 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:48:18 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  138.83ms
+2026-06-08T20:48:19 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.2006s
+2026-06-08T20:48:19 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:48:19 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  224.06ms
+2026-06-08T20:48:20 UTC | INFO     | AUTH     | user=cliente_001          network_delay=1.2931s
+2026-06-08T20:48:20 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:48:20 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency= 1318.21ms
+2026-06-08T20:48:21 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.7683s
+2026-06-08T20:48:21 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:48:21 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  774.33ms
+2026-06-08T20:48:21 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.1317s
+2026-06-08T20:48:21 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:48:21 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  141.65ms
+2026-06-08T20:48:23 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.36ms
+2026-06-08T20:48:23 UTC | INFO     | AUTH     | user=cliente_001          network_delay=1.4965s
+2026-06-08T20:48:23 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:48:23 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency= 1503.45ms
+2026-06-08T20:48:24 UTC | INFO     | AUTH     | user=cliente_001          network_delay=1.0455s
+2026-06-08T20:48:24 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:48:24 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency= 1058.97ms
+2026-06-08T20:48:25 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.9286s
+2026-06-08T20:48:25 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:48:25 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  934.01ms
+2026-06-08T20:48:53 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    4.45ms
+2026-06-08T20:49:24 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    1.37ms
+2026-06-08T20:49:55 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.33ms
+2026-06-08T20:50:26 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.76ms
+2026-06-08T20:50:56 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    5.00ms
+2026-06-08T20:51:27 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    3.14ms
+2026-06-08T20:51:58 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=   21.46ms
+2026-06-08T20:52:29 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.40ms
+2026-06-08T20:52:39 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.6838s
+2026-06-08T20:52:39 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:52:39 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  693.85ms
+2026-06-08T20:52:40 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.7493s
+2026-06-08T20:52:40 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:52:40 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  759.91ms
+2026-06-08T20:52:41 UTC | INFO     | AUTH     | user=cliente_001          network_delay=1.2109s
+2026-06-08T20:52:41 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:52:41 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency= 1218.27ms
+2026-06-08T20:52:41 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.2828s
+2026-06-08T20:52:41 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:52:41 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  289.37ms
+2026-06-08T20:52:42 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.8038s
+2026-06-08T20:52:42 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:52:42 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  809.30ms
+2026-06-08T20:52:43 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.4713s
+2026-06-08T20:52:43 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:52:43 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  489.37ms
+2026-06-08T20:52:43 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.3758s
+2026-06-08T20:52:43 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:52:43 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  388.82ms
+2026-06-08T20:52:45 UTC | INFO     | AUTH     | user=cliente_001          network_delay=1.4672s
+2026-06-08T20:52:45 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:52:45 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency= 1475.83ms
+2026-06-08T20:52:46 UTC | INFO     | AUTH     | user=cliente_001          network_delay=1.2043s
+2026-06-08T20:52:46 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:52:46 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency= 1212.94ms
+2026-06-08T20:52:47 UTC | INFO     | AUTH     | user=cliente_001          network_delay=1.3879s
+2026-06-08T20:52:47 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:52:47 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency= 1394.63ms
+2026-06-08T20:52:48 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.7955s
+2026-06-08T20:52:48 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:52:48 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  801.54ms
+2026-06-08T20:52:49 UTC | INFO     | AUTH     | user=cliente_001          network_delay=1.3751s
+2026-06-08T20:52:50 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:52:50 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency= 1394.28ms
+2026-06-08T20:52:51 UTC | INFO     | AUTH     | user=cliente_001          network_delay=1.4074s
+2026-06-08T20:52:51 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:52:51 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency= 1433.39ms
+2026-06-08T20:52:52 UTC | INFO     | AUTH     | user=cliente_001          network_delay=1.0719s
+2026-06-08T20:52:52 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:52:52 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency= 1087.42ms
+2026-06-08T20:52:54 UTC | INFO     | AUTH     | user=cliente_001          network_delay=1.4259s
+2026-06-08T20:52:54 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:52:54 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency= 1427.92ms
+2026-06-08T20:52:54 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.6787s
+2026-06-08T20:52:54 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:52:54 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  682.04ms
+2026-06-08T20:52:55 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.4079s
+2026-06-08T20:52:55 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:52:55 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  412.49ms
+2026-06-08T20:52:55 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.4538s
+2026-06-08T20:52:55 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:52:55 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  459.77ms
+2026-06-08T20:52:56 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.7875s
+2026-06-08T20:52:56 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:52:56 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  792.70ms
+2026-06-08T20:52:57 UTC | INFO     | AUTH     | user=cliente_001          network_delay=1.2959s
+2026-06-08T20:52:57 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:52:57 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency= 1332.64ms
+2026-06-08T20:52:59 UTC | INFO     | AUTH     | user=cliente_001          network_delay=1.3502s
+2026-06-08T20:52:59 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:52:59 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency= 1420.21ms
+2026-06-08T20:52:59 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=   34.93ms
+2026-06-08T20:53:00 UTC | INFO     | AUTH     | user=cliente_001          network_delay=1.1221s
+2026-06-08T20:53:00 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:53:00 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency= 1125.88ms
+2026-06-08T20:53:01 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.4654s
+2026-06-08T20:53:01 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:53:01 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  469.90ms
+2026-06-08T20:53:02 UTC | INFO     | AUTH     | user=cliente_001          network_delay=1.3835s
+2026-06-08T20:53:02 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:53:02 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency= 1391.85ms
+2026-06-08T20:53:03 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.9300s
+2026-06-08T20:53:03 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:53:03 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  937.91ms
+2026-06-08T20:53:04 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.7874s
+2026-06-08T20:53:04 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:53:04 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  800.14ms
+2026-06-08T20:53:04 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.2575s
+2026-06-08T20:53:04 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:53:04 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  267.89ms
+2026-06-08T20:53:06 UTC | INFO     | AUTH     | user=cliente_001          network_delay=1.4124s
+2026-06-08T20:53:06 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:53:06 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency= 1418.09ms
+2026-06-08T20:53:06 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.1750s
+2026-06-08T20:53:06 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:53:06 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  193.75ms
+2026-06-08T20:53:06 UTC | INFO     | AUTH     | user=cliente_001          network_delay=0.3757s
+2026-06-08T20:53:07 UTC | INFO     | AUTH_OK  | user=cliente_001          account=MX-4821-0001 type=PREMIUM
+2026-06-08T20:53:07 UTC | INFO     | REQUEST  | method=POST   endpoint=/api/v1/auth/login                  status=200 latency=  385.21ms
+2026-06-08T20:53:30 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.83ms
+2026-06-08T20:54:01 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.86ms
+2026-06-08T20:54:32 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    3.54ms
+2026-06-08T20:55:02 UTC | INFO     | REQUEST  | method=GET    endpoint=/                                   status=200 latency=    0.62ms
