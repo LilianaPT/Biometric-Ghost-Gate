@@ -1,8 +1,18 @@
 import streamlit as st
 import time
 import os
-# Importamos el motor que acabas de crear en la carpeta zone2
-from zone2.model_isolation import EngineIABGG
+import sys
+
+# TRUCO MÁGICO: Le decimos a Python que busque desde la raíz del proyecto
+ruta_raiz = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+if ruta_raiz not in sys.path:
+    sys.path.insert(0, ruta_raiz)
+
+# importación limpia 
+from src.ia_monitoring.zone2.model_isolation import EngineIABGG
+
+# Configuración del título de la página
+st.set_page_config(page_title="BGG - Panel de Monitoreo IA", layout="wide")
 
 # Configuración del título de la página
 st.set_page_config(page_title="BGG - Panel de Monitoreo IA", layout="wide")
@@ -10,7 +20,7 @@ st.set_page_config(page_title="BGG - Panel de Monitoreo IA", layout="wide")
 st.title("🛡️ Biometric Ghost Gate (BGG)")
 st.subheader("Zona 2: El Búnker - Motor de IA Analítico en Tiempo Real")
 
-# Inicializamos el motor de IA
+# Inicializar el motor de IA
 engine = EngineIABGG()
 
 # Crear un botón en la interfaz para entrenar la IA en vivo
