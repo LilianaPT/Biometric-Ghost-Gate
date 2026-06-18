@@ -1,78 +1,82 @@
 import os
 import re
+import glob
 import pandas as pd
 from sklearn.ensemble import IsolationForest
 
 class EngineIABGG:
-    def __init__(self, ruta_log="logs/active/bgg_operativo.log"):
-        self.ruta_log = ruta_log
-        # Configuramos la IA para que detecte un 5% de actividad sospechosa (bots)
+    def __init__(self, ruta_log=None):
+        if ruta_log is None:
+            base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../"))
+            self.ruta_log = os.path.join(base_dir, "datasets", "*.log")
+        else:
+            self.ruta_log = ruta_log
+            
         self.model = IsolationForest(contamination=0.05, random_state=42)
-        
-        # Datos de respaldo por si el archivo del simulador está vacío
         self.respaldo_datos = pd.DataFrame([
-            [1.0, 150.0, 5.0],  # Acceso normal: Buena respuesta, velocidad humana
-            [1.0, 300.0, 12.0], # Acceso normal: Red lenta, velocidad humana
-            [0.0, 50.0, 0.1]    # Bloqueo: Contraseña mal, velocidad absurdamente rápida (Bot)
+            [1.0, 150.0, 5.0],
+            [1.0, 300.0, 12.0],
+            [0.0, 50.0, 0.1]
         ], columns=["status_score", "latency", "user_speed"])
 
     def cargar_datos_desde_log(self) -> pd.DataFrame:
         """
-        Esta función lee el cuaderno de notas (log) del simulador
-        y extrae los números de latencia y velocidad del usuario.
+        Analiza los logs reales extrayendo latencias de REQUEST 
+        y retrasos de red de los bloques de AUTH.
         """
         X = []
+        archivos_encontrados = glob.glob(self.ruta_log)
         
-        # Si el archivo todavía no existe, usamos los datos de respaldo
-        if not os.path.exists(self.ruta_log):
+        if not archivos_encontrados:
             return self.respaldo_datos
 
-        # Herramientas para buscar las palabras clave en el texto del log
-        regex_auth = r"status=(?P<status>\d+).*latency=\s*(?P<latency>[\d.]+)ms"
-        regex_speed = r"user_speed=(?P<user_speed>[\d.]+)s"
+        # Expresiones regulares adaptadas al formato real de tus archivos
+        # Con \s* soportamos cualquier cantidad de espacios o tabulaciones intermedias
+        regex_request = r"status=(?P<status>\d+).*latency=\s*(?P<latency>[\d.]+)(?P<unidad>ms|s)"
+        regex_auth = r"network_delay=(?P<delay>[\d.]+)s"
         
-        with open(self.ruta_log, "r", encoding="utf-8") as f:
-            for linea in f:
-                match_auth = re.search(regex_auth, linea)
-                match_speed = re.search(regex_speed, linea)
-                
-                # Si la línea tiene los datos completos, los guardamos
-                if match_auth and match_speed:
-                    status_code = int(match_auth.group("status"))
-                    latency = float(match_auth.group("latency"))
-                    user_speed = float(match_speed.group("user_speed"))
+        for ruta_archivo in archivos_encontrados:
+            # Mantendremos un registro del último delay de red detectado
+            ultimo_delay = 0.5  # Valor por defecto si no ha habido login previo
+            
+            with open(ruta_archivo, "r", encoding="utf-8") as f:
+                for linea in f:
+                    # 1. Si es línea de AUTH, guardamos el delay del usuario
+                    match_auth = re.search(regex_auth, linea)
+                    if match_auth:
+                        ultimo_delay = float(match_auth.group("delay"))
+                        continue
                     
-                    # Convertimos el estatus a un número (1 si entró, 0 si falló)
-                    status_score = 1.0 if status_code == 200 else 0.0
-                    X.append([status_score, latency, user_speed])
-                    
+                    # 2. Si es línea de REQUEST, extraemos los datos y armamos el registro
+                    match_req = re.search(regex_request, linea)
+                    if match_req:
+                        status_code = int(match_req.group("status"))
+                        latency_val = float(match_req.group("latency"))
+                        unidad = match_req.group("unidad")
+                        
+                        # Si por alguna razón viene en segundos, normalizamos a milisegundos
+                        if unidad == "s":
+                            latency_val = latency_val * 1000.0
+                            
+                        status_score = 1.0 if status_code == 200 else 0.0
+                        
+                        # Guardamos: [status, latencia_ms, velocidad_usuario_en_segundos]
+                        X.append([status_score, latency_val, ultimo_delay])
+                        
         if len(X) == 0:
             return self.respaldo_datos
             
         return pd.DataFrame(X, columns=["status_score", "latency", "user_speed"])
 
     def entrenar_modelo(self):
-        """
-        Esta función hace que la IA analice los datos y aprenda
-        a distinguir entre un humano y un bot.
-        """
         df = self.cargar_datos_desde_log()
-        
-        # Entrenamos la IA con las 3 variables: estatus, latencia y velocidad
         self.model.fit(df[["status_score", "latency", "user_speed"]])
         return df
 
     def evaluar_transaccion(self, status_code, latency, user_speed) -> str:
-        """
-        Revisa un intento de login en tiempo real y decide si bloquea o no.
-        """
         status_score = 1.0 if status_code == 200 else 0.0
-        
-        # La IA predice: 1 es comportamiento normal, -1 es sospechoso (bot)
         prediccion = self.model.predict([[status_score, latency, user_speed]])[0]
         
-        # Regla inteligente: Si la IA duda, pero la contraseña es correcta y la velocidad
-        # es humana, no lo bloqueamos (evitamos un falso positivo por culpa del internet).
         if prediccion == -1 and status_code == 200 and user_speed >= 2.0:
             return "APROBADO_CON_ALTA_LATENCIA"
         elif prediccion == -1:
