@@ -31,7 +31,7 @@ from pydantic import BaseModel, Field
 # ─────────────────────────────────────────────────────────────────────────────
 
 APP_NAME        = "BGG Banking Simulator"
-APP_VERSION     = "1.2.0"
+APP_VERSION     = "1.3.0"
 APP_DESCRIPTION = "Sandbox de simulación de login bancario — Proyecto Biometric Ghost Gate"
 
 LOG_DIR         = "logs/active"
@@ -72,12 +72,86 @@ MOCK_USERS: dict[str, dict[str, Any]] = {
         "account_type": "ADMIN",
         "account_id"  : "MX-0000-ADMIN",
     },
+    "cliente_003": {
+        "password"    : "Sof1a#Segura25",
+        "full_name"   : "Sofía Ramírez Torres",
+        "account_type": "STANDARD",
+        "account_id"  : "MX-4821-0003",
+    },
+    "cliente_004": {
+        "password"    : "Javi3r$Bank99",
+        "full_name"   : "Javier Ortega Salas",
+        "account_type": "PREMIUM",
+        "account_id"  : "MX-4821-0004",
+    },
+    "cliente_005": {
+        "password"    : "Luc1a_Clave#7",
+        "full_name"   : "Lucía Fernández Vega",
+        "account_type": "STANDARD",
+        "account_id"  : "MX-4821-0005",
+    },
+    "cliente_006": {
+        "password"    : "Dani3l#Pass456",
+        "full_name"   : "Daniel Herrera Cruz",
+        "account_type": "PREMIUM",
+        "account_id"  : "MX-4821-0006",
+    },
+    "cliente_007": {
+        "password"    : "Valen#Banco88",
+        "full_name"   : "Valentina Castro Rojas",
+        "account_type": "STANDARD",
+        "account_id"  : "MX-4821-0007",
+    },
+    "cliente_008": {
+        "password"    : "Mig3l$Segur0!",
+        "full_name"   : "Miguel Ángel Domínguez",
+        "account_type": "STANDARD",
+        "account_id"  : "MX-4821-0008",
+    },
+    "cliente_009": {
+        "password"    : "Camil4#Vault22",
+        "full_name"   : "Camila Jiménez Paredes",
+        "account_type": "PREMIUM",
+        "account_id"  : "MX-4821-0009",
+    },
+    "cliente_010": {
+        "password"    : "Rod0lfo$Key33",
+        "full_name"   : "Rodolfo Aguilar Peña",
+        "account_type": "STANDARD",
+        "account_id"  : "MX-4821-0010",
+    },
+    "cliente_011": {
+        "password"    : "Isa4b3l#Pin09",
+        "full_name"   : "Isabel Navarro Solís",
+        "account_type": "STANDARD",
+        "account_id"  : "MX-4821-0011",
+    },
+    "cliente_012": {
+        "password"    : "Emili0$Token71",
+        "full_name"   : "Emilio Ríos Bautista",
+        "account_type": "PREMIUM",
+        "account_id"  : "MX-4821-0012",
+    },
+    "soporte_bgg": {
+        "password"    : "Soport3#BGG2024",
+        "full_name"   : "AQ Tech Soporte",
+        "account_type": "SUPPORT",
+        "account_id"  : "MX-0000-SOPORTE",
+    },
+    "auditor_bgg": {
+        "password"    : "Audit0r$Ghost1",
+        "full_name"   : "AQ Tech Auditoría",
+        "account_type": "AUDITOR",
+        "account_id"  : "MX-0000-AUDITOR",
+    },
 }
 
 # Cuentas destino válidas para simular transferencias (mock)
+# Incluye las cuentas de todos los usuarios de MOCK_USERS + 3 cuentas externas
 MOCK_DESTINATION_ACCOUNTS: set[str] = {
-    "MX-4821-0001", "MX-4821-0002", "MX-0000-ADMIN",
-    "MX-9012-3344", "MX-9012-3355", "MX-9012-3366",
+    user["account_id"] for user in MOCK_USERS.values()
+} | {
+    "MX-9012-3344", "MX-9012-3355", "MX-9012-3366",  # externas (no login)
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -402,12 +476,9 @@ async def banking_login(payload: LoginRequest):
     4. Retorna `200 OK` con token simulado si las credenciales son correctas.
     5. Retorna `401 Unauthorized` si las credenciales son incorrectas.
 
-    **Usuarios de prueba disponibles:**
-    | Username       | Password              | Tipo     |
-    |----------------|-----------------------|----------|
-    | `cliente_001`  | `Banco$ecure#2024`    | PREMIUM  |
-    | `cliente_002`  | `P@ssw0rd_BGG`        | STANDARD |
-    | `admin_bgg`    | `BGG_AdmIn!2024`      | ADMIN    |
+    **Usuarios de prueba disponibles (15 en total):**
+    Ver tabla completa en README.md → sección "Usuarios Mock".
+    Ejemplos: `cliente_001` / `Banco$ecure#2024` · `admin_bgg` / `BGG_AdmIn!2024`
     """
     # ── Simular latencia de red (crucial para el dataset de IA) ───────────
     delay_aplicado = await simulate_network_latency()
