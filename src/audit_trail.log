@@ -1,0 +1,89 @@
+2026-05-18T19:07:36-0500 | INFO     | BGG_HOUSEKEEPING | ************************************************************
+2026-05-18T19:07:36-0500 | INFO     | BGG_HOUSEKEEPING | INICIO | Sistema: BGG-HOUSEKEEPING-v1.0
+2026-05-18T19:07:36-0500 | INFO     | BGG_HOUSEKEEPING | INICIO | Timestamp UTC: 2026-05-19T00:07:36.177226+00:00
+2026-05-18T19:07:36-0500 | INFO     | BGG_HOUSEKEEPING | INICIO | PID del proceso: 27316
+2026-05-18T19:07:36-0500 | INFO     | BGG_HOUSEKEEPING | ************************************************************
+2026-05-18T19:07:36-0500 | INFO     | BGG_HOUSEKEEPING | OCI | Iniciando autenticación via Instance Principals...
+2026-05-18T19:07:36-0500 | WARNING  | BGG_HOUSEKEEPING | OCI | [SIMULACIÓN] Instance Principals desactivados. Ejecutando en modo local sin conexión a OCI.
+2026-05-18T19:07:36-0500 | INFO     | BGG_HOUSEKEEPING | DEV | Generando datos de prueba para demostración...
+2026-05-18T19:07:36-0500 | INFO     | BGG_HOUSEKEEPING | TEST | Generando 5 archivo(s) de log de prueba...
+2026-05-18T19:07:36-0500 | INFO     | BGG_HOUSEKEEPING | TEST | Archivos de prueba generados correctamente.
+2026-05-18T19:07:36-0500 | INFO     | BGG_HOUSEKEEPING | ============================================================
+2026-05-18T19:07:36-0500 | INFO     | BGG_HOUSEKEEPING | CERTIFICADOS | Iniciando proceso de rotación mTLS...
+2026-05-18T19:07:36-0500 | INFO     | BGG_HOUSEKEEPING | CERTIFICADOS | No existe certificado previo. Primera emisión.
+2026-05-18T19:07:36-0500 | INFO     | BGG_HOUSEKEEPING | CERTIFICADOS | Nuevo certificado generado: [BGG-CERT-12DE4E633B1740DFAFA3760A8BF53850]
+2026-05-18T19:07:36-0500 | INFO     | BGG_HOUSEKEEPING | CERTIFICADOS | Certificado activo actualizado en: c:\Users\lpant\Documents\Biometric_Ghost_Gate\src\certs\mtls_cert_active.pem
+2026-05-18T19:07:36-0500 | INFO     | BGG_HOUSEKEEPING | CERTIFICADOS | Rotación mTLS completada exitosamente.
+2026-05-18T19:07:36-0500 | INFO     | BGG_HOUSEKEEPING | ============================================================
+2026-05-18T19:07:36-0500 | INFO     | BGG_HOUSEKEEPING | ============================================================
+2026-05-18T19:07:36-0500 | INFO     | BGG_HOUSEKEEPING | HOUSEKEEPING | Iniciando limpieza de logs. Umbral de antigüedad: 30s
+2026-05-18T19:07:36-0500 | INFO     | BGG_HOUSEKEEPING | HOUSEKEEPING | 5 archivo(s) .log encontrado(s) en logs/active.
+2026-05-18T19:07:36-0500 | INFO     | BGG_HOUSEKEEPING | HOUSEKEEPING | ARCHIVADO: bgg_operativo_001.log -> logs/archive/20260519T000736Z_bgg_operativo_001.log (antigüedad: 40.0s)
+2026-05-18T19:07:36-0500 | INFO     | BGG_HOUSEKEEPING | HOUSEKEEPING | ARCHIVADO: bgg_operativo_002.log -> logs/archive/20260519T000736Z_bgg_operativo_002.log (antigüedad: 40.0s)
+2026-05-18T19:07:36-0500 | INFO     | BGG_HOUSEKEEPING | HOUSEKEEPING | ARCHIVADO: bgg_operativo_003.log -> logs/archive/20260519T000736Z_bgg_operativo_003.log (antigüedad: 40.0s)
+2026-05-18T19:07:36-0500 | INFO     | BGG_HOUSEKEEPING | HOUSEKEEPING | Resumen: Procesados=5 | Archivados=3 | Errores=0
+2026-05-18T19:07:36-0500 | INFO     | BGG_HOUSEKEEPING | ============================================================
+2026-05-18T19:07:36-0500 | INFO     | BGG_HOUSEKEEPING | ************************************************************
+2026-05-18T19:07:36-0500 | INFO     | BGG_HOUSEKEEPING | FIN | Housekeeping completado EXITOSAMENTE. Logs archivados: 3.
+2026-05-18T19:07:36-0500 | INFO     | BGG_HOUSEKEEPING | FIN | Timestamp UTC: 2026-05-19T00:07:36.191441+00:00
+2026-05-18T19:07:36-0500 | INFO     | BGG_HOUSEKEEPING | ************************************************************
+2026-05-18T20:21:17-0500 | INFO     | BGG_HOUSEKEEPING | ************************************************************
+2026-05-18T20:21:17-0500 | INFO     | BGG_HOUSEKEEPING | INICIO | Sistema: BGG-HOUSEKEEPING-v1.0
+2026-05-18T20:21:17-0500 | INFO     | BGG_HOUSEKEEPING | INICIO | Timestamp UTC: 2026-05-19T01:21:17.704963+00:00
+2026-05-18T20:21:17-0500 | INFO     | BGG_HOUSEKEEPING | INICIO | PID del proceso: 3536
+2026-05-18T20:21:17-0500 | INFO     | BGG_HOUSEKEEPING | ************************************************************
+2026-05-18T20:21:17-0500 | INFO     | BGG_HOUSEKEEPING | OCI | Iniciando autenticación via Instance Principals...
+2026-05-18T20:21:17-0500 | WARNING  | BGG_HOUSEKEEPING | OCI | [SIMULACIÓN] Instance Principals desactivados. Ejecutando en modo local sin conexión a OCI.
+2026-05-18T20:21:17-0500 | INFO     | BGG_HOUSEKEEPING | DEV | Generando datos de prueba para demostración...
+2026-05-18T20:21:17-0500 | INFO     | BGG_HOUSEKEEPING | TEST | Generando 5 archivo(s) de log de prueba...
+2026-05-18T20:21:17-0500 | INFO     | BGG_HOUSEKEEPING | TEST | Archivos de prueba generados correctamente.
+2026-05-18T20:21:17-0500 | INFO     | BGG_HOUSEKEEPING | ============================================================
+2026-05-18T20:21:17-0500 | INFO     | BGG_HOUSEKEEPING | CERTIFICADOS | Iniciando proceso de rotación mTLS...
+2026-05-18T20:21:17-0500 | INFO     | BGG_HOUSEKEEPING | CERTIFICADOS | Certificado anterior detectado: [CERT_ID=BGG-CERT-12DE4E633B1740DFAFA3760...]
+2026-05-18T20:21:17-0500 | INFO     | BGG_HOUSEKEEPING | CERTIFICADOS | Nuevo certificado generado: [BGG-CERT-DB121FD73E4748AD95ADDBAB5B9A81E7]
+2026-05-18T20:21:17-0500 | INFO     | BGG_HOUSEKEEPING | CERTIFICADOS | Certificado activo actualizado en: c:\Users\lpant\Documents\Biometric_Ghost_Gate\src\certs\mtls_cert_active.pem
+2026-05-18T20:21:17-0500 | INFO     | BGG_HOUSEKEEPING | CERTIFICADOS | [SIMULACIÓN] Certificado anterior INVALIDADO: [CERT_ID=BGG-CERT-12DE4E633B1740DFAFA3760...]
+2026-05-18T20:21:17-0500 | INFO     | BGG_HOUSEKEEPING | CERTIFICADOS | Rotación mTLS completada exitosamente.
+2026-05-18T20:21:17-0500 | INFO     | BGG_HOUSEKEEPING | ============================================================
+2026-05-18T20:21:17-0500 | INFO     | BGG_HOUSEKEEPING | ============================================================
+2026-05-18T20:21:17-0500 | INFO     | BGG_HOUSEKEEPING | HOUSEKEEPING | Iniciando limpieza de logs. Umbral de antigüedad: 30s
+2026-05-18T20:21:17-0500 | INFO     | BGG_HOUSEKEEPING | HOUSEKEEPING | 5 archivo(s) .log encontrado(s) en logs/active.
+2026-05-18T20:21:17-0500 | INFO     | BGG_HOUSEKEEPING | HOUSEKEEPING | ARCHIVADO: bgg_operativo_001.log -> logs/archive/20260519T012117Z_bgg_operativo_001.log (antigüedad: 40.0s)
+2026-05-18T20:21:17-0500 | INFO     | BGG_HOUSEKEEPING | HOUSEKEEPING | ARCHIVADO: bgg_operativo_002.log -> logs/archive/20260519T012117Z_bgg_operativo_002.log (antigüedad: 40.0s)
+2026-05-18T20:21:17-0500 | INFO     | BGG_HOUSEKEEPING | HOUSEKEEPING | ARCHIVADO: bgg_operativo_003.log -> logs/archive/20260519T012117Z_bgg_operativo_003.log (antigüedad: 40.0s)
+2026-05-18T20:21:17-0500 | INFO     | BGG_HOUSEKEEPING | HOUSEKEEPING | Resumen: Procesados=5 | Archivados=3 | Errores=0
+2026-05-18T20:21:17-0500 | INFO     | BGG_HOUSEKEEPING | ============================================================
+2026-05-18T20:21:17-0500 | INFO     | BGG_HOUSEKEEPING | ************************************************************
+2026-05-18T20:21:17-0500 | INFO     | BGG_HOUSEKEEPING | FIN | Housekeeping completado EXITOSAMENTE. Logs archivados: 3.
+2026-05-18T20:21:17-0500 | INFO     | BGG_HOUSEKEEPING | FIN | Timestamp UTC: 2026-05-19T01:21:17.716777+00:00
+2026-05-18T20:21:17-0500 | INFO     | BGG_HOUSEKEEPING | ************************************************************
+2026-05-22T20:39:28-0500 | INFO     | BGG_HOUSEKEEPING | ************************************************************
+2026-05-22T20:39:28-0500 | INFO     | BGG_HOUSEKEEPING | INICIO | Sistema: BGG-HOUSEKEEPING-v1.0
+2026-05-22T20:39:28-0500 | INFO     | BGG_HOUSEKEEPING | INICIO | Timestamp UTC: 2026-05-23T01:39:28.265957+00:00
+2026-05-22T20:39:28-0500 | INFO     | BGG_HOUSEKEEPING | INICIO | PID del proceso: 18768
+2026-05-22T20:39:28-0500 | INFO     | BGG_HOUSEKEEPING | ************************************************************
+2026-05-22T20:39:28-0500 | INFO     | BGG_HOUSEKEEPING | OCI | Iniciando autenticación via Instance Principals...
+2026-05-22T20:39:28-0500 | WARNING  | BGG_HOUSEKEEPING | OCI | [SIMULACIÓN] Instance Principals desactivados. Ejecutando en modo local sin conexión a OCI.
+2026-05-22T20:39:28-0500 | INFO     | BGG_HOUSEKEEPING | DEV | Generando datos de prueba para demostración...
+2026-05-22T20:39:28-0500 | INFO     | BGG_HOUSEKEEPING | TEST | Generando 5 archivo(s) de log de prueba...
+2026-05-22T20:39:28-0500 | INFO     | BGG_HOUSEKEEPING | TEST | Archivos de prueba generados correctamente.
+2026-05-22T20:39:28-0500 | INFO     | BGG_HOUSEKEEPING | ============================================================
+2026-05-22T20:39:28-0500 | INFO     | BGG_HOUSEKEEPING | CERTIFICADOS | Iniciando proceso de rotación mTLS...
+2026-05-22T20:39:28-0500 | INFO     | BGG_HOUSEKEEPING | CERTIFICADOS | Certificado anterior detectado: [CERT_ID=BGG-CERT-DB121FD73E4748AD95ADDBA...]
+2026-05-22T20:39:28-0500 | INFO     | BGG_HOUSEKEEPING | CERTIFICADOS | Nuevo certificado generado: [BGG-CERT-9DC48BC6209D4BEE9BF86A3D7FA332F6]
+2026-05-22T20:39:28-0500 | INFO     | BGG_HOUSEKEEPING | CERTIFICADOS | Certificado activo actualizado en: c:\Users\lpant\Documents\Biometric_Ghost_Gate\src\certs\mtls_cert_active.pem
+2026-05-22T20:39:28-0500 | INFO     | BGG_HOUSEKEEPING | CERTIFICADOS | [SIMULACIÓN] Certificado anterior INVALIDADO: [CERT_ID=BGG-CERT-DB121FD73E4748AD95ADDBA...]
+2026-05-22T20:39:28-0500 | INFO     | BGG_HOUSEKEEPING | CERTIFICADOS | Rotación mTLS completada exitosamente.
+2026-05-22T20:39:28-0500 | INFO     | BGG_HOUSEKEEPING | ============================================================
+2026-05-22T20:39:28-0500 | INFO     | BGG_HOUSEKEEPING | ============================================================
+2026-05-22T20:39:28-0500 | INFO     | BGG_HOUSEKEEPING | HOUSEKEEPING | Iniciando limpieza de logs. Umbral de antigüedad: 315360000s
+2026-05-22T20:39:28-0500 | INFO     | BGG_HOUSEKEEPING | HOUSEKEEPING | 5 archivo(s) .log encontrado(s) en logs/active.
+2026-05-22T20:39:28-0500 | INFO     | BGG_HOUSEKEEPING | HOUSEKEEPING | RETENCIÓN LFPDPPP Art.37: 20260523T013928Z_bgg_operativo_001.log conservar hasta: 2026-05-23T01:39:18.267717+00:00
+2026-05-22T20:39:28-0500 | INFO     | BGG_HOUSEKEEPING | HOUSEKEEPING | RETENCIÓN LFPDPPP Art.37: 20260523T013928Z_bgg_operativo_002.log conservar hasta: 2026-05-23T01:39:18.268521+00:00
+2026-05-22T20:39:28-0500 | INFO     | BGG_HOUSEKEEPING | HOUSEKEEPING | RETENCIÓN LFPDPPP Art.37: 20260523T013928Z_bgg_operativo_003.log conservar hasta: 2026-05-23T01:39:18.269250+00:00
+2026-05-22T20:39:28-0500 | INFO     | BGG_HOUSEKEEPING | HOUSEKEEPING | Resumen: Procesados=5 | Archivados=3 | Errores=0
+2026-05-22T20:39:28-0500 | INFO     | BGG_HOUSEKEEPING | ============================================================
+2026-05-22T20:39:28-0500 | INFO     | BGG_HOUSEKEEPING | ************************************************************
+2026-05-22T20:39:28-0500 | INFO     | BGG_HOUSEKEEPING | FIN | Housekeeping completado EXITOSAMENTE. Logs archivados: 3.
+2026-05-22T20:39:28-0500 | INFO     | BGG_HOUSEKEEPING | FIN | Timestamp UTC: 2026-05-23T01:39:28.286681+00:00
+2026-05-22T20:39:28-0500 | INFO     | BGG_HOUSEKEEPING | ************************************************************
