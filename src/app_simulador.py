@@ -22,6 +22,7 @@ from typing import Any
 
 import uvicorn
 from fastapi import FastAPI, HTTPException, Request, status
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
@@ -30,7 +31,7 @@ from pydantic import BaseModel, Field
 # ─────────────────────────────────────────────────────────────────────────────
 
 APP_NAME        = "BGG Banking Simulator"
-APP_VERSION     = "1.1.0"
+APP_VERSION     = "1.3.0"
 APP_DESCRIPTION = "Sandbox de simulación de login bancario — Proyecto Biometric Ghost Gate"
 
 LOG_DIR         = "logs/active"
@@ -71,6 +72,86 @@ MOCK_USERS: dict[str, dict[str, Any]] = {
         "account_type": "ADMIN",
         "account_id"  : "MX-0000-ADMIN",
     },
+    "cliente_003": {
+        "password"    : "Sof1a#Segura25",
+        "full_name"   : "Sofía Ramírez Torres",
+        "account_type": "STANDARD",
+        "account_id"  : "MX-4821-0003",
+    },
+    "cliente_004": {
+        "password"    : "Javi3r$Bank99",
+        "full_name"   : "Javier Ortega Salas",
+        "account_type": "PREMIUM",
+        "account_id"  : "MX-4821-0004",
+    },
+    "cliente_005": {
+        "password"    : "Luc1a_Clave#7",
+        "full_name"   : "Lucía Fernández Vega",
+        "account_type": "STANDARD",
+        "account_id"  : "MX-4821-0005",
+    },
+    "cliente_006": {
+        "password"    : "Dani3l#Pass456",
+        "full_name"   : "Daniel Herrera Cruz",
+        "account_type": "PREMIUM",
+        "account_id"  : "MX-4821-0006",
+    },
+    "cliente_007": {
+        "password"    : "Valen#Banco88",
+        "full_name"   : "Valentina Castro Rojas",
+        "account_type": "STANDARD",
+        "account_id"  : "MX-4821-0007",
+    },
+    "cliente_008": {
+        "password"    : "Mig3l$Segur0!",
+        "full_name"   : "Miguel Ángel Domínguez",
+        "account_type": "STANDARD",
+        "account_id"  : "MX-4821-0008",
+    },
+    "cliente_009": {
+        "password"    : "Camil4#Vault22",
+        "full_name"   : "Camila Jiménez Paredes",
+        "account_type": "PREMIUM",
+        "account_id"  : "MX-4821-0009",
+    },
+    "cliente_010": {
+        "password"    : "Rod0lfo$Key33",
+        "full_name"   : "Rodolfo Aguilar Peña",
+        "account_type": "STANDARD",
+        "account_id"  : "MX-4821-0010",
+    },
+    "cliente_011": {
+        "password"    : "Isa4b3l#Pin09",
+        "full_name"   : "Isabel Navarro Solís",
+        "account_type": "STANDARD",
+        "account_id"  : "MX-4821-0011",
+    },
+    "cliente_012": {
+        "password"    : "Emili0$Token71",
+        "full_name"   : "Emilio Ríos Bautista",
+        "account_type": "PREMIUM",
+        "account_id"  : "MX-4821-0012",
+    },
+    "soporte_bgg": {
+        "password"    : "Soport3#BGG2024",
+        "full_name"   : "AQ Tech Soporte",
+        "account_type": "SUPPORT",
+        "account_id"  : "MX-0000-SOPORTE",
+    },
+    "auditor_bgg": {
+        "password"    : "Audit0r$Ghost1",
+        "full_name"   : "AQ Tech Auditoría",
+        "account_type": "AUDITOR",
+        "account_id"  : "MX-0000-AUDITOR",
+    },
+}
+
+# Cuentas destino válidas para simular transferencias (mock)
+# Incluye las cuentas de todos los usuarios de MOCK_USERS + 3 cuentas externas
+MOCK_DESTINATION_ACCOUNTS: set[str] = {
+    user["account_id"] for user in MOCK_USERS.values()
+} | {
+    "MX-9012-3344", "MX-9012-3355", "MX-9012-3366",  # externas (no login)
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -148,6 +229,20 @@ app = FastAPI(
 )
 
 # ─────────────────────────────────────────────────────────────────────────────
+# CORS — Necesario para que el Frontend Web (App de Simulación) y el Bot
+# Simulator puedan llamar a este backend desde el navegador / otra máquina.
+# Abierto en el Sandbox; restringir a orígenes específicos en producción.
+# ─────────────────────────────────────────────────────────────────────────────
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins     = ["*"],
+    allow_credentials = False,
+    allow_methods     = ["GET", "POST"],
+    allow_headers     = ["*"],
+)
+
+# ─────────────────────────────────────────────────────────────────────────────
 # MIDDLEWARE — Registro de peticiones (REQUEST LOGGER)
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -195,6 +290,45 @@ class LoginRequest(BaseModel):
         description="Contraseña del cliente bancario",
         examples=["Banco$ecure#2024"],
     )
+    user_speed: float | None = Field(
+        default=None,
+        ge=0,
+        le=300,
+        description=(
+            "Tiempo real (segundos) medido en el navegador desde que se "
+            "mostró el formulario hasta que se envió. Escenario A. "
+            "Si se omite, el backend lo simula (Escenario B — bots/pruebas)."
+        ),
+        examples=[4.87],
+    )
+
+
+class TransactionRequest(BaseModel):
+    """Payload de solicitud de transferencia bancaria simulada."""
+    account_id: str = Field(
+        ...,
+        description="Cuenta origen (obtenida al hacer login)",
+        examples=["MX-4821-0001"],
+    )
+    destination_account: str = Field(
+        ...,
+        description="Cuenta destino de la transferencia",
+        examples=["MX-9012-3344"],
+    )
+    amount: float = Field(
+        ...,
+        gt=0,
+        le=1_000_000,
+        description="Monto a transferir (MXN)",
+        examples=[1500.00],
+    )
+    user_speed: float | None = Field(
+        default=None,
+        ge=0,
+        le=300,
+        description="Tiempo real (segundos) que tardó en llenar el formulario de transacción.",
+        examples=[6.12],
+    )
 
 
 class LoginSuccessResponse(BaseModel):
@@ -210,6 +344,24 @@ class LoginSuccessResponse(BaseModel):
 
 class LoginFailResponse(BaseModel):
     """Respuesta ante credenciales inválidas."""
+    status : str
+    message: str
+    code   : str
+
+
+class TransactionSuccessResponse(BaseModel):
+    """Respuesta exitosa tras una transferencia simulada."""
+    status              : str
+    message             : str
+    transaction_id      : str
+    account_id          : str
+    destination_account : str
+    amount              : float
+    processed_at        : str
+
+
+class TransactionFailResponse(BaseModel):
+    """Respuesta ante una transferencia inválida."""
     status : str
     message: str
     code   : str
@@ -237,6 +389,16 @@ def generate_mock_token(username: str) -> str:
     rnd_hex  = format(random.randint(0x100000, 0xFFFFFF), "x").upper()
     usr_hash = format(hash(username) & 0xFFFF, "04x").upper()
     return f"BGG-{ts_hex}-{rnd_hex}-{usr_hash}"
+
+
+def generate_mock_transaction_id() -> str:
+    """
+    Genera un ID de transacción simulado.
+    Formato: TXN-<HEX_TIMESTAMP>-<HEX_RANDOM>
+    """
+    ts_hex  = format(int(time.time()), "x").upper()
+    rnd_hex = format(random.randint(0x100000, 0xFFFFFF), "x").upper()
+    return f"TXN-{ts_hex}-{rnd_hex}"
 
 
 async def simulate_network_latency() -> float:
@@ -314,23 +476,26 @@ async def banking_login(payload: LoginRequest):
     4. Retorna `200 OK` con token simulado si las credenciales son correctas.
     5. Retorna `401 Unauthorized` si las credenciales son incorrectas.
 
-    **Usuarios de prueba disponibles:**
-    | Username       | Password              | Tipo     |
-    |----------------|-----------------------|----------|
-    | `cliente_001`  | `Banco$ecure#2024`    | PREMIUM  |
-    | `cliente_002`  | `P@ssw0rd_BGG`        | STANDARD |
-    | `admin_bgg`    | `BGG_AdmIn!2024`      | ADMIN    |
+    **Usuarios de prueba disponibles (15 en total):**
+    Ver tabla completa en README.md → sección "Usuarios Mock".
+    Ejemplos: `cliente_001` / `Banco$ecure#2024` · `admin_bgg` / `BGG_AdmIn!2024`
     """
     # ── Simular latencia de red (crucial para el dataset de IA) ───────────
     delay_aplicado = await simulate_network_latency()
 
-    # ── Simular velocidad del usuario rellenando el formulario (Escenario B)
-    user_speed = simulate_user_speed()
+    # ── user_speed: Escenario A (real, del navegador) o Escenario B (simulado)
+    if payload.user_speed is not None:
+        user_speed  = payload.user_speed
+        source_type = "human"       # vino del Frontend Web con medición real
+    else:
+        user_speed  = simulate_user_speed()
+        source_type = "simulated"   # vino de un bot/script sin medir tiempo real
 
     logger.info(
         f"AUTH     | user={payload.username:<20} "
         f"network_delay={delay_aplicado:.4f}s "
-        f"user_speed={user_speed:.2f}s"
+        f"user_speed={user_speed:.2f}s "
+        f"source_type={source_type}"
     )
 
     # ── Validación mock de credenciales ───────────────────────────────────
@@ -341,7 +506,8 @@ async def banking_login(payload: LoginRequest):
         logger.warning(
             f"AUTH_FAIL| user={payload.username:<20} "
             f"reason=invalid_credentials "
-            f"user_speed={user_speed:.2f}s"
+            f"user_speed={user_speed:.2f}s "
+            f"source_type={source_type}"
         )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -360,7 +526,8 @@ async def banking_login(payload: LoginRequest):
         f"AUTH_OK  | user={payload.username:<20} "
         f"account={user_data['account_id']} "
         f"type={user_data['account_type']} "
-        f"user_speed={user_speed:.2f}s"
+        f"user_speed={user_speed:.2f}s "
+        f"source_type={source_type}"
     )
 
     return LoginSuccessResponse(
@@ -371,6 +538,84 @@ async def banking_login(payload: LoginRequest):
         account_type = user_data["account_type"],
         full_name    = user_data["full_name"],
         issued_at    = issued_at,
+    )
+
+
+@app.post(
+    "/api/v1/transactions/transfer",
+    summary="Simulación de Transferencia Bancaria",
+    tags=["Transacciones"],
+    responses={
+        200: {"description": "Transferencia exitosa", "model": TransactionSuccessResponse},
+        400: {"description": "Transferencia inválida",  "model": TransactionFailResponse},
+        422: {"description": "Payload malformado"},
+    },
+)
+async def bank_transfer(payload: TransactionRequest):
+    """
+    ## Simulador de transferencia bancaria (post-login).
+
+    Igual que el login, mide `user_speed` (Escenario A si viene del
+    Frontend Web con medición real, Escenario B/simulado si no).
+
+    **Cuentas destino válidas (mock):**
+    `MX-4821-0001`, `MX-4821-0002`, `MX-0000-ADMIN`,
+    `MX-9012-3344`, `MX-9012-3355`, `MX-9012-3366`
+    """
+    delay_aplicado = await simulate_network_latency()
+
+    if payload.user_speed is not None:
+        user_speed  = payload.user_speed
+        source_type = "human"
+    else:
+        user_speed  = simulate_user_speed()
+        source_type = "simulated"
+
+    logger.info(
+        f"TXN      | account={payload.account_id:<15} "
+        f"destination={payload.destination_account:<15} "
+        f"amount={payload.amount:>10.2f} "
+        f"network_delay={delay_aplicado:.4f}s "
+        f"user_speed={user_speed:.2f}s "
+        f"source_type={source_type}"
+    )
+
+    # ── Validación mock de cuenta destino ──────────────────────────────────
+    if payload.destination_account not in MOCK_DESTINATION_ACCOUNTS:
+        logger.warning(
+            f"TXN_FAIL | account={payload.account_id:<15} "
+            f"reason=invalid_destination "
+            f"user_speed={user_speed:.2f}s "
+            f"source_type={source_type}"
+        )
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=TransactionFailResponse(
+                status  = "error",
+                message = "Cuenta destino inválida.",
+                code    = "TXN_INVALID_DESTINATION",
+            ).model_dump(),
+        )
+
+    transaction_id = generate_mock_transaction_id()
+    processed_at   = datetime.now(timezone.utc).isoformat()
+
+    logger.info(
+        f"TXN_OK   | account={payload.account_id:<15} "
+        f"destination={payload.destination_account:<15} "
+        f"amount={payload.amount:>10.2f} "
+        f"user_speed={user_speed:.2f}s "
+        f"source_type={source_type}"
+    )
+
+    return TransactionSuccessResponse(
+        status              = "success",
+        message             = "Transferencia procesada exitosamente.",
+        transaction_id      = transaction_id,
+        account_id          = payload.account_id,
+        destination_account = payload.destination_account,
+        amount              = payload.amount,
+        processed_at        = processed_at,
     )
 
 
