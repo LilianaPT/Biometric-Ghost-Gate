@@ -52,6 +52,7 @@ COPY --from=builder /opt/venv /opt/venv
 
 # Copiar código fuente
 COPY src/ ./src/
+COPY frontend/ ./frontend/
 
 # Crear estructura de logs con permisos para el usuario bgg
 RUN mkdir -p logs/active && \
