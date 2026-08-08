@@ -15,6 +15,7 @@ import asyncio
 import logging
 import os
 import random
+import re
 import time
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
@@ -24,6 +25,7 @@ import uvicorn
 from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -31,7 +33,7 @@ from pydantic import BaseModel, Field
 # ─────────────────────────────────────────────────────────────────────────────
 
 APP_NAME        = "BGG Banking Simulator"
-APP_VERSION     = "1.3.0"
+APP_VERSION     = "1.5.0"
 APP_DESCRIPTION = "Sandbox de simulación de login bancario — Proyecto Biometric Ghost Gate"
 
 LOG_DIR         = "logs/active"
@@ -208,6 +210,7 @@ async def lifespan(app: FastAPI):
     logger.info(f"STARTUP  | Log operativo: {os.path.abspath(LOG_FILE)}")
     logger.info(f"STARTUP  | Latencia simulada : {LATENCY_MIN_SEC}s – {LATENCY_MAX_SEC}s")
     logger.info(f"STARTUP  | User speed (mock) : {USER_SPEED_MIN_SEC}s – {USER_SPEED_MAX_SEC}s [Escenario B]")
+    logger.info(f"STARTUP  | Frontend Web        : http://0.0.0.0:8000/app/  (compartir vía ngrok como <URL>/app/)")
     logger.info("=" * 70)
     yield
     logger.info("=" * 70)
@@ -241,6 +244,21 @@ app.add_middleware(
     allow_methods     = ["GET", "POST"],
     allow_headers     = ["*"],
 )
+
+# ─────────────────────────────────────────────────────────────────────────────
+# FRONTEND WEB — Sirve frontend/index.html directamente desde el backend.
+# Así el equipo entra con un solo link (el mismo de ngrok) sin necesidad
+# de descargar ni clonar el repositorio: <URL_BACKEND>/app/
+# ─────────────────────────────────────────────────────────────────────────────
+
+FRONTEND_DIR = "frontend"
+
+if os.path.isdir(FRONTEND_DIR):
+    app.mount("/app", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")
+else:
+    logging.getLogger("bgg_simulador").warning(
+        f"STARTUP  | Carpeta '{FRONTEND_DIR}/' no encontrada — /app no estará disponible."
+    )
 
 # ─────────────────────────────────────────────────────────────────────────────
 # MIDDLEWARE — Registro de peticiones (REQUEST LOGGER)
@@ -365,6 +383,22 @@ class TransactionFailResponse(BaseModel):
     status : str
     message: str
     code   : str
+
+
+class AccountActivityItem(BaseModel):
+    """Un evento individual en el historial de actividad de una cuenta."""
+    timestamp   : str
+    event       : str            # AUTH_OK | AUTH_FAIL | TXN_OK | TXN_FAIL
+    detail      : str            # descripción legible del evento
+    source_type : str            # human | simulated
+    user_speed  : float | None = None
+
+
+class AccountActivityResponse(BaseModel):
+    """Historial de actividad reciente de una cuenta bancaria."""
+    account_id : str
+    count      : int
+    activity   : list[AccountActivityItem]
 
 
 class HealthResponse(BaseModel):
@@ -616,6 +650,110 @@ async def bank_transfer(payload: TransactionRequest):
         destination_account = payload.destination_account,
         amount              = payload.amount,
         processed_at        = processed_at,
+    )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PARSEO DEL LOG — Utilidad para reconstruir actividad por cuenta
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Ejemplo de línea real generada por el logger:
+# 2026-08-07T16:52:00 UTC | INFO     | AUTH_OK  | user=cliente_001 account=MX-4821-0001 type=PREMIUM user_speed=7.43s source_type=human
+LOG_LINE_PATTERN = re.compile(
+    r"^(?P<timestamp>\S+) UTC \| \S+\s*\| (?P<event>AUTH_OK|AUTH_FAIL|TXN_OK|TXN_FAIL)\s*\|\s*(?P<rest>.+)$"
+)
+
+
+def parse_account_activity(account_id: str, limit: int = 20) -> list[AccountActivityItem]:
+    """
+    Lee bgg_operativo.log de atrás hacia adelante y devuelve los eventos
+    (login y transacciones) donde la cuenta indicada participó, ya sea
+    como cuenta propia (account=) o como destino de una transferencia
+    (destination=).
+    """
+    if not os.path.exists(LOG_FILE):
+        return []
+
+    resultados: list[AccountActivityItem] = []
+
+    with open(LOG_FILE, "r", encoding="utf-8") as f:
+        lineas = f.readlines()
+
+    for linea in reversed(lineas):
+        if len(resultados) >= limit:
+            break
+
+        match = LOG_LINE_PATTERN.match(linea.strip())
+        if not match:
+            continue
+
+        event = match.group("event")
+        rest  = match.group("rest")
+
+        # Solo nos interesan líneas donde aparezca esta cuenta,
+        # ya sea como cuenta propia o como destino de una transferencia.
+        if f"account={account_id}" not in rest and f"destination={account_id}" not in rest:
+            continue
+
+        source_type_match = re.search(r"source_type=(\S+)", rest)
+        user_speed_match  = re.search(r"user_speed=([\d.]+)s", rest)
+        amount_match      = re.search(r"amount=\s*([\d.]+)", rest)
+        destination_match = re.search(r"destination=(\S+)", rest)
+
+        source_type = source_type_match.group(1) if source_type_match else "unknown"
+        user_speed  = float(user_speed_match.group(1)) if user_speed_match else None
+
+        # Descripción legible según el tipo de evento
+        if event == "AUTH_OK":
+            detail = "Inicio de sesión exitoso"
+        elif event == "AUTH_FAIL":
+            detail = "Intento de inicio de sesión fallido"
+        elif event == "TXN_OK":
+            monto = amount_match.group(1) if amount_match else "?"
+            dest  = destination_match.group(1) if destination_match else "?"
+            detail = f"Transferencia enviada: ${monto} → {dest}"
+        else:  # TXN_FAIL
+            detail = "Transferencia rechazada"
+
+        resultados.append(AccountActivityItem(
+            timestamp   = match.group("timestamp"),
+            event       = event,
+            detail      = detail,
+            source_type = source_type,
+            user_speed  = user_speed,
+        ))
+
+    return resultados
+
+
+@app.get(
+    "/api/v1/accounts/{account_id}/activity",
+    response_model=AccountActivityResponse,
+    summary="Historial de actividad de una cuenta",
+    tags=["Cuentas"],
+)
+async def account_activity(account_id: str, limit: int = 20):
+    """
+    ## Historial de actividad reciente de una cuenta bancaria.
+
+    Lee `bgg_operativo.log` y devuelve los últimos eventos (logins y
+    transferencias, exitosos o fallidos) donde la cuenta indicada
+    participó — ya sea como titular o como cuenta destino.
+
+    Cada evento incluye `source_type` (`human` o `simulated`), así el
+    Frontend puede mostrar si una transacción vino de una persona real
+    o de un script/bot — justo lo que se necesita para ver, al iniciar
+    sesión, si el bot usó esta misma cuenta anteriormente.
+
+    **Parámetros:**
+    - `account_id`: cuenta a consultar (ej. `MX-4821-0001`)
+    - `limit`: máximo de eventos a devolver (default 20)
+    """
+    eventos = parse_account_activity(account_id, limit=limit)
+    return AccountActivityResponse(
+        account_id = account_id,
+        count      = len(eventos),
+        activity   = eventos,
     )
 
 

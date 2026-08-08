@@ -120,7 +120,7 @@
   .log-feed{
     margin-top:22px; border-top:1px solid var(--line); padding-top:14px;
   }
-  .log-feed-label{ font-size:11px; color:var(--text-2); text-transform:uppercase; letter-spacing:.06em; margin-bottom:8px; }
+  .log-feed-label{ font-size:11px; color:var(--text-2); text-transform:uppercase; letter-spacing:.06em; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; }
   .log-entry{
     font-family:var(--font-mono); font-size:11.5px; color:var(--text-1);
     padding:5px 0; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; gap:10px;
@@ -128,6 +128,28 @@
   .log-entry:last-child{ border-bottom:none; }
   .log-entry .tag{ color:var(--accent); flex-shrink:0; }
   .log-entry .fail{ color:var(--red); }
+
+  .activity-refresh{
+    background:none; border:none; color:var(--text-2); font-size:11px; cursor:pointer;
+    text-decoration:underline; padding:0;
+  }
+  .activity-refresh:hover{ color:var(--accent); }
+  .activity-row{
+    display:flex; justify-content:space-between; align-items:center; gap:10px;
+    padding:7px 0; border-bottom:1px solid var(--line); font-size:12px;
+  }
+  .activity-row:last-child{ border-bottom:none; }
+  .activity-left{ display:flex; flex-direction:column; gap:2px; min-width:0; }
+  .activity-detail{ color:var(--text-0); font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .activity-time{ color:var(--text-2); font-size:10.5px; font-family:var(--font-mono); }
+  .source-pill{
+    font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.04em;
+    padding:3px 8px; border-radius:20px; flex-shrink:0;
+  }
+  .source-pill.human{ background:var(--accent-dim); color:var(--accent); }
+  .source-pill.simulated{ background:var(--amber-dim); color:var(--amber); }
+  .source-pill.unknown{ background:var(--bg-2); color:var(--text-2); }
+  .activity-empty{ font-size:12px; color:var(--text-2); padding:8px 0; }
 </style>
 </head>
 <body>
@@ -220,6 +242,14 @@
       <div class="result" id="txnResult"></div>
 
       <div class="log-feed">
+        <div class="log-feed-label">
+          <span>Historial de la cuenta (servidor)</span>
+          <button class="activity-refresh" id="btnRefreshActivity">Actualizar</button>
+        </div>
+        <div id="activityFeed"></div>
+      </div>
+
+      <div class="log-feed">
         <div class="log-feed-label">Actividad de esta sesión</div>
         <div id="logFeed"></div>
       </div>
@@ -307,6 +337,13 @@
     }
   }
   apiBaseInput.addEventListener('change', checkApi);
+
+  // Si la página se está sirviendo desde el propio backend (vía /app/),
+  // detectamos el origen automáticamente — así quien entra por el link
+  // de ngrok/Tailscale no tiene que escribir ninguna URL a mano.
+  if (window.location.protocol !== 'file:' && window.location.pathname.startsWith('/app')){
+    apiBaseInput.value = window.location.origin;
+  }
   checkApi();
 
   // ── Log visual de la sesión ───────────────────────────────────────────
@@ -358,7 +395,48 @@
     logFeed.innerHTML = '';
     pushLog('LOGIN_OK', `${data.account_id} · user_speed=${currentUserSpeed()}s`);
     startTimer();
+    loadAccountActivity(data.account_id);
   }
+
+  // ── Historial de la cuenta (consulta real al servidor) ───────────────────
+  const activityFeed = document.getElementById('activityFeed');
+
+  async function loadAccountActivity(accountId){
+    activityFeed.innerHTML = '<div class="activity-empty">Consultando servidor…</div>';
+    try {
+      const res = await fetch(apiBase() + `/api/v1/accounts/${accountId}/activity?limit=20`);
+      const data = await res.json();
+
+      if (!res.ok || !data.activity || data.activity.length === 0){
+        activityFeed.innerHTML = '<div class="activity-empty">Sin actividad registrada todavía para esta cuenta.</div>';
+        return;
+      }
+
+      activityFeed.innerHTML = '';
+      data.activity.forEach(item => {
+        const row = document.createElement('div');
+        row.className = 'activity-row';
+        const pillClass = item.source_type === 'human' ? 'human'
+                          : item.source_type === 'simulated' ? 'simulated' : 'unknown';
+        const pillLabel = item.source_type === 'human' ? 'Humano'
+                          : item.source_type === 'simulated' ? 'Bot / Simulado' : '—';
+        row.innerHTML = `
+          <div class="activity-left">
+            <span class="activity-detail">${item.detail}</span>
+            <span class="activity-time">${item.timestamp}${item.user_speed !== null ? ' · ' + item.user_speed.toFixed(2) + 's' : ''}</span>
+          </div>
+          <span class="source-pill ${pillClass}">${pillLabel}</span>
+        `;
+        activityFeed.appendChild(row);
+      });
+    } catch (err) {
+      activityFeed.innerHTML = '<div class="activity-empty">No se pudo consultar el historial del servidor.</div>';
+    }
+  }
+
+  document.getElementById('btnRefreshActivity').addEventListener('click', () => {
+    if (currentAccount) loadAccountActivity(currentAccount.account_id);
+  });
 
   // ── PASO 2: Transacción ────────────────────────────────────────────────
   const txnResult = document.getElementById('txnResult');
@@ -390,6 +468,7 @@
         pushLog('TXN_OK', `$${amountVal.toFixed(2)} → ${destination_account} · user_speed=${user_speed}s`);
         document.getElementById('amount').value = '';
         startTimer();
+        loadAccountActivity(currentAccount.account_id);
       } else {
         showResult(txnResult, 'err', data.detail?.message || 'Transferencia rechazada.');
         pushLog('TXN_FAIL', `${destination_account} rechazada`, true);
