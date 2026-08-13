@@ -149,6 +149,11 @@
   .activity-left{ display:flex; flex-direction:column; gap:2px; min-width:0; }
   .activity-detail{ color:var(--text-0); font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .activity-time{ color:var(--text-2); font-size:10.5px; font-family:var(--font-mono); }
+  .geo-link{
+    font-size:10.5px; color:var(--accent); text-decoration:none; width:fit-content;
+  }
+  .geo-link:hover{ text-decoration:underline; }
+  .geo-link.geo-none{ color:var(--text-2); cursor:default; }
   .source-pill{
     font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.04em;
     padding:3px 8px; border-radius:20px; flex-shrink:0;
@@ -191,6 +196,7 @@
       <label class="config-label" for="apiBase">URL del backend (VM)</label>
       <input type="text" id="apiBase" value="http://localhost:8000" spellcheck="false">
       <div class="config-status"><span class="dot" id="apiDot"></span><span id="apiStatusText">Sin verificar</span></div>
+      <div class="config-status"><span class="dot" id="geoDot"></span><span id="geoStatusText">Solicitando ubicación…</span></div>
     </div>
   </div>
 
@@ -271,6 +277,7 @@
   let fieldTouchedAt = null;   // momento del primer input real del usuario
   let viewLoadedAt   = Date.now();
   let tickInterval   = null;
+  let currentGeo     = null;   // { latitude, longitude } | null si no hay permiso
 
   const timerDisplay = document.getElementById('timerDisplay');
   const timerHint    = document.getElementById('timerHint');
@@ -279,6 +286,34 @@
   const apiBaseInput  = document.getElementById('apiBase');
   const apiDot        = document.getElementById('apiDot');
   const apiStatusText = document.getElementById('apiStatusText');
+  const geoStatusText = document.getElementById('geoStatusText');
+  const geoDot        = document.getElementById('geoDot');
+
+  // ── Geolocalización — se pide una sola vez al cargar la página ───────
+  function requestGeolocation(){
+    if (!navigator.geolocation){
+      geoDot.className = 'dot bad';
+      geoStatusText.textContent = 'Geolocalización no soportada';
+      return;
+    }
+    geoStatusText.textContent = 'Solicitando permiso…';
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        currentGeo = {
+          latitude: Math.round(pos.coords.latitude * 100000) / 100000,
+          longitude: Math.round(pos.coords.longitude * 100000) / 100000
+        };
+        geoDot.className = 'dot ok';
+        geoStatusText.textContent = `Ubicación activa (±${Math.round(pos.coords.accuracy)}m)`;
+      },
+      () => {
+        currentGeo = null;
+        geoDot.className = 'dot bad';
+        geoStatusText.textContent = 'Sin permiso de ubicación';
+      },
+      { enableHighAccuracy: false, timeout: 8000 }
+    );
+  }
 
   function apiBase(){
     return apiBaseInput.value.trim().replace(/\/$/, '');
@@ -377,7 +412,11 @@
       const res = await fetch(apiBase() + '/api/v1/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password, user_speed })
+        body: JSON.stringify({
+          username, password, user_speed,
+          latitude: currentGeo?.latitude ?? null,
+          longitude: currentGeo?.longitude ?? null
+        })
       });
       const data = await res.json();
 
@@ -428,10 +467,18 @@
                           : item.source_type === 'simulated' ? 'simulated' : 'unknown';
         const pillLabel = item.source_type === 'human' ? 'Humano'
                           : item.source_type === 'simulated' ? 'Bot / Simulado' : '—';
+
+        const hasGeo = item.latitude !== null && item.latitude !== undefined
+                    && item.longitude !== null && item.longitude !== undefined;
+        const geoHtml = hasGeo
+          ? `<a class="geo-link" href="https://www.google.com/maps?q=${item.latitude},${item.longitude}" target="_blank" rel="noopener">📍 ${item.latitude.toFixed(3)}, ${item.longitude.toFixed(3)}</a>`
+          : `<span class="geo-link geo-none">📍 Ubicación no disponible</span>`;
+
         row.innerHTML = `
           <div class="activity-left">
             <span class="activity-detail">${item.detail}</span>
             <span class="activity-time">${item.timestamp}${item.user_speed !== null ? ' · ' + item.user_speed.toFixed(2) + 's' : ''}</span>
+            ${geoHtml}
           </div>
           <span class="source-pill ${pillClass}">${pillLabel}</span>
         `;
@@ -466,7 +513,9 @@
           account_id: currentAccount.account_id,
           destination_account,
           amount: amountVal,
-          user_speed
+          user_speed,
+          latitude: currentGeo?.latitude ?? null,
+          longitude: currentGeo?.longitude ?? null
         })
       });
       const data = await res.json();
@@ -503,6 +552,7 @@
   }
 
   startTimer();
+  requestGeolocation();
 </script>
 
 </body>

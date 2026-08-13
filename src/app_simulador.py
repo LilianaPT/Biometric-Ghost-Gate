@@ -33,7 +33,7 @@ from pydantic import BaseModel, Field
 # ─────────────────────────────────────────────────────────────────────────────
 
 APP_NAME        = "BGG Banking Simulator"
-APP_VERSION     = "1.5.0"
+APP_VERSION     = "1.6.0"
 APP_DESCRIPTION = "Sandbox de simulación de login bancario — Proyecto Biometric Ghost Gate"
 
 LOG_DIR         = "logs/active"
@@ -319,6 +319,20 @@ class LoginRequest(BaseModel):
         ),
         examples=[4.87],
     )
+    latitude: float | None = Field(
+        default=None,
+        ge=-90,
+        le=90,
+        description="Latitud capturada por el navegador (geolocalización del cliente). Opcional.",
+        examples=[19.4326],
+    )
+    longitude: float | None = Field(
+        default=None,
+        ge=-180,
+        le=180,
+        description="Longitud capturada por el navegador (geolocalización del cliente). Opcional.",
+        examples=[-99.1332],
+    )
 
 
 class TransactionRequest(BaseModel):
@@ -346,6 +360,20 @@ class TransactionRequest(BaseModel):
         le=300,
         description="Tiempo real (segundos) que tardó en llenar el formulario de transacción.",
         examples=[6.12],
+    )
+    latitude: float | None = Field(
+        default=None,
+        ge=-90,
+        le=90,
+        description="Latitud capturada por el navegador (geolocalización del cliente). Opcional.",
+        examples=[19.4326],
+    )
+    longitude: float | None = Field(
+        default=None,
+        ge=-180,
+        le=180,
+        description="Longitud capturada por el navegador (geolocalización del cliente). Opcional.",
+        examples=[-99.1332],
     )
 
 
@@ -392,6 +420,8 @@ class AccountActivityItem(BaseModel):
     detail      : str            # descripción legible del evento
     source_type : str            # human | simulated
     user_speed  : float | None = None
+    latitude    : float | None = None
+    longitude   : float | None = None
 
 
 class AccountActivityResponse(BaseModel):
@@ -459,6 +489,17 @@ def simulate_user_speed() -> float:
     Retorna el tiempo simulado en segundos (float con 2 decimales).
     """
     return round(random.uniform(USER_SPEED_MIN_SEC, USER_SPEED_MAX_SEC), 2)
+
+
+def format_geo_log(latitude: float | None, longitude: float | None) -> str:
+    """
+    Formatea la geolocalización (si viene del navegador) para agregarla
+    al final de la línea de log. Si no viene (bots, navegadores sin
+    permiso de ubicación, etc.), no agrega nada — el campo es opcional.
+    """
+    if latitude is None or longitude is None:
+        return ""
+    return f"geo_lat={latitude:.5f} geo_lon={longitude:.5f}"
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -529,7 +570,8 @@ async def banking_login(payload: LoginRequest):
         f"AUTH     | user={payload.username:<20} "
         f"network_delay={delay_aplicado:.4f}s "
         f"user_speed={user_speed:.2f}s "
-        f"source_type={source_type}"
+        f"source_type={source_type} "
+        f"{format_geo_log(payload.latitude, payload.longitude)}"
     )
 
     # ── Validación mock de credenciales ───────────────────────────────────
@@ -541,7 +583,8 @@ async def banking_login(payload: LoginRequest):
             f"AUTH_FAIL| user={payload.username:<20} "
             f"reason=invalid_credentials "
             f"user_speed={user_speed:.2f}s "
-            f"source_type={source_type}"
+            f"source_type={source_type} "
+            f"{format_geo_log(payload.latitude, payload.longitude)}"
         )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -561,7 +604,8 @@ async def banking_login(payload: LoginRequest):
         f"account={user_data['account_id']} "
         f"type={user_data['account_type']} "
         f"user_speed={user_speed:.2f}s "
-        f"source_type={source_type}"
+        f"source_type={source_type} "
+        f"{format_geo_log(payload.latitude, payload.longitude)}"
     )
 
     return LoginSuccessResponse(
@@ -611,7 +655,8 @@ async def bank_transfer(payload: TransactionRequest):
         f"amount={payload.amount:>10.2f} "
         f"network_delay={delay_aplicado:.4f}s "
         f"user_speed={user_speed:.2f}s "
-        f"source_type={source_type}"
+        f"source_type={source_type} "
+        f"{format_geo_log(payload.latitude, payload.longitude)}"
     )
 
     # ── Validación mock de cuenta destino ──────────────────────────────────
@@ -620,7 +665,8 @@ async def bank_transfer(payload: TransactionRequest):
             f"TXN_FAIL | account={payload.account_id:<15} "
             f"reason=invalid_destination "
             f"user_speed={user_speed:.2f}s "
-            f"source_type={source_type}"
+            f"source_type={source_type} "
+            f"{format_geo_log(payload.latitude, payload.longitude)}"
         )
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -639,7 +685,8 @@ async def bank_transfer(payload: TransactionRequest):
         f"destination={payload.destination_account:<15} "
         f"amount={payload.amount:>10.2f} "
         f"user_speed={user_speed:.2f}s "
-        f"source_type={source_type}"
+        f"source_type={source_type} "
+        f"{format_geo_log(payload.latitude, payload.longitude)}"
     )
 
     return TransactionSuccessResponse(
@@ -699,9 +746,13 @@ def parse_account_activity(account_id: str, limit: int = 20) -> list[AccountActi
         user_speed_match  = re.search(r"user_speed=([\d.]+)s", rest)
         amount_match      = re.search(r"amount=\s*([\d.]+)", rest)
         destination_match = re.search(r"destination=(\S+)", rest)
+        geo_lat_match     = re.search(r"geo_lat=(-?[\d.]+)", rest)
+        geo_lon_match     = re.search(r"geo_lon=(-?[\d.]+)", rest)
 
         source_type = source_type_match.group(1) if source_type_match else "unknown"
         user_speed  = float(user_speed_match.group(1)) if user_speed_match else None
+        latitude    = float(geo_lat_match.group(1)) if geo_lat_match else None
+        longitude   = float(geo_lon_match.group(1)) if geo_lon_match else None
 
         # Descripción legible según el tipo de evento
         if event == "AUTH_OK":
@@ -721,6 +772,8 @@ def parse_account_activity(account_id: str, limit: int = 20) -> list[AccountActi
             detail      = detail,
             source_type = source_type,
             user_speed  = user_speed,
+            latitude    = latitude,
+            longitude   = longitude,
         ))
 
     return resultados
