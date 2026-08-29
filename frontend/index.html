@@ -22,7 +22,7 @@
   body{
     margin:0; background:var(--bg-0); color:var(--text-0);
     font-family:var(--font-body); min-height:100vh;
-    display:flex; align-items:center; justify-content:center; padding:32px 16px;
+    display:flex; align-items:flex-start; justify-content:center; padding:32px 16px;
   }
   .shell{
     width:100%; max-width:920px;
@@ -31,6 +31,13 @@
     overflow:hidden;
   }
   @media (max-width:720px){ .shell{ grid-template-columns:1fr; } }
+  @media (max-width:480px){
+    body{ padding:12px; }
+    .main{ padding:22px 18px 20px; }
+    .activity-row{ flex-wrap:wrap; row-gap:4px; }
+    .activity-left{ flex-basis:100%; }
+    .source-pill{ font-size:9.5px; padding:2px 7px; }
+  }
 
   /* ── Panel lateral: identidad + pulso en vivo ───────────────────── */
   .side{
@@ -120,7 +127,7 @@
   .log-feed{
     margin-top:22px; border-top:1px solid var(--line); padding-top:14px;
   }
-  .log-feed-label{ font-size:11px; color:var(--text-2); text-transform:uppercase; letter-spacing:.06em; margin-bottom:8px; }
+  .log-feed-label{ font-size:11px; color:var(--text-2); text-transform:uppercase; letter-spacing:.06em; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; }
   .log-entry{
     font-family:var(--font-mono); font-size:11.5px; color:var(--text-1);
     padding:5px 0; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; gap:10px;
@@ -128,6 +135,33 @@
   .log-entry:last-child{ border-bottom:none; }
   .log-entry .tag{ color:var(--accent); flex-shrink:0; }
   .log-entry .fail{ color:var(--red); }
+
+  .activity-refresh{
+    background:none; border:none; color:var(--text-2); font-size:11px; cursor:pointer;
+    text-decoration:underline; padding:0;
+  }
+  .activity-refresh:hover{ color:var(--accent); }
+  .activity-row{
+    display:flex; justify-content:space-between; align-items:center; gap:10px;
+    padding:7px 0; border-bottom:1px solid var(--line); font-size:12px;
+  }
+  .activity-row:last-child{ border-bottom:none; }
+  .activity-left{ display:flex; flex-direction:column; gap:2px; min-width:0; }
+  .activity-detail{ color:var(--text-0); font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .activity-time{ color:var(--text-2); font-size:10.5px; font-family:var(--font-mono); }
+  .geo-link{
+    font-size:10.5px; color:var(--accent); text-decoration:none; width:fit-content;
+  }
+  .geo-link:hover{ text-decoration:underline; }
+  .geo-link.geo-none{ color:var(--text-2); cursor:default; }
+  .source-pill{
+    font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.04em;
+    padding:3px 8px; border-radius:20px; flex-shrink:0;
+  }
+  .source-pill.human{ background:var(--accent-dim); color:var(--accent); }
+  .source-pill.simulated{ background:var(--amber-dim); color:var(--amber); }
+  .source-pill.unknown{ background:var(--bg-2); color:var(--text-2); }
+  .activity-empty{ font-size:12px; color:var(--text-2); padding:8px 0; }
 </style>
 </head>
 <body>
@@ -162,6 +196,7 @@
       <label class="config-label" for="apiBase">URL del backend (VM)</label>
       <input type="text" id="apiBase" value="http://localhost:8000" spellcheck="false">
       <div class="config-status"><span class="dot" id="apiDot"></span><span id="apiStatusText">Sin verificar</span></div>
+      <div class="config-status"><span class="dot" id="geoDot"></span><span id="geoStatusText">Solicitando ubicación…</span></div>
     </div>
   </div>
 
@@ -220,6 +255,14 @@
       <div class="result" id="txnResult"></div>
 
       <div class="log-feed">
+        <div class="log-feed-label">
+          <span>Historial de la cuenta (servidor)</span>
+          <button class="activity-refresh" id="btnRefreshActivity">Actualizar</button>
+        </div>
+        <div id="activityFeed"></div>
+      </div>
+
+      <div class="log-feed">
         <div class="log-feed-label">Actividad de esta sesión</div>
         <div id="logFeed"></div>
       </div>
@@ -234,6 +277,7 @@
   let fieldTouchedAt = null;   // momento del primer input real del usuario
   let viewLoadedAt   = Date.now();
   let tickInterval   = null;
+  let currentGeo     = null;   // { latitude, longitude } | null si no hay permiso
 
   const timerDisplay = document.getElementById('timerDisplay');
   const timerHint    = document.getElementById('timerHint');
@@ -242,6 +286,34 @@
   const apiBaseInput  = document.getElementById('apiBase');
   const apiDot        = document.getElementById('apiDot');
   const apiStatusText = document.getElementById('apiStatusText');
+  const geoStatusText = document.getElementById('geoStatusText');
+  const geoDot        = document.getElementById('geoDot');
+
+  // ── Geolocalización — se pide una sola vez al cargar la página ───────
+  function requestGeolocation(){
+    if (!navigator.geolocation){
+      geoDot.className = 'dot bad';
+      geoStatusText.textContent = 'Geolocalización no soportada';
+      return;
+    }
+    geoStatusText.textContent = 'Solicitando permiso…';
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        currentGeo = {
+          latitude: Math.round(pos.coords.latitude * 100000) / 100000,
+          longitude: Math.round(pos.coords.longitude * 100000) / 100000
+        };
+        geoDot.className = 'dot ok';
+        geoStatusText.textContent = `Ubicación activa (±${Math.round(pos.coords.accuracy)}m)`;
+      },
+      () => {
+        currentGeo = null;
+        geoDot.className = 'dot bad';
+        geoStatusText.textContent = 'Sin permiso de ubicación';
+      },
+      { enableHighAccuracy: false, timeout: 8000 }
+    );
+  }
 
   function apiBase(){
     return apiBaseInput.value.trim().replace(/\/$/, '');
@@ -307,6 +379,13 @@
     }
   }
   apiBaseInput.addEventListener('change', checkApi);
+
+  // Si la página se está sirviendo desde el propio backend (vía /app/),
+  // detectamos el origen automáticamente — así quien entra por el link
+  // de ngrok/Tailscale no tiene que escribir ninguna URL a mano.
+  if (window.location.protocol !== 'file:' && window.location.pathname.startsWith('/app')){
+    apiBaseInput.value = window.location.origin;
+  }
   checkApi();
 
   // ── Log visual de la sesión ───────────────────────────────────────────
@@ -333,7 +412,11 @@
       const res = await fetch(apiBase() + '/api/v1/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password, user_speed })
+        body: JSON.stringify({
+          username, password, user_speed,
+          latitude: currentGeo?.latitude ?? null,
+          longitude: currentGeo?.longitude ?? null
+        })
       });
       const data = await res.json();
 
@@ -358,7 +441,57 @@
     logFeed.innerHTML = '';
     pushLog('LOGIN_OK', `${data.account_id} · user_speed=${currentUserSpeed()}s`);
     startTimer();
+    loadAccountActivity(data.account_id);
+    window.scrollTo(0, 0);
   }
+
+  // ── Historial de la cuenta (consulta real al servidor) ───────────────────
+  const activityFeed = document.getElementById('activityFeed');
+
+  async function loadAccountActivity(accountId){
+    activityFeed.innerHTML = '<div class="activity-empty">Consultando servidor…</div>';
+    try {
+      const res = await fetch(apiBase() + `/api/v1/accounts/${accountId}/activity?limit=20`);
+      const data = await res.json();
+
+      if (!res.ok || !data.activity || data.activity.length === 0){
+        activityFeed.innerHTML = '<div class="activity-empty">Sin actividad registrada todavía para esta cuenta.</div>';
+        return;
+      }
+
+      activityFeed.innerHTML = '';
+      data.activity.forEach(item => {
+        const row = document.createElement('div');
+        row.className = 'activity-row';
+        const pillClass = item.source_type === 'human' ? 'human'
+                          : item.source_type === 'simulated' ? 'simulated' : 'unknown';
+        const pillLabel = item.source_type === 'human' ? 'Humano'
+                          : item.source_type === 'simulated' ? 'Bot / Simulado' : '—';
+
+        const hasGeo = item.latitude !== null && item.latitude !== undefined
+                    && item.longitude !== null && item.longitude !== undefined;
+        const geoHtml = hasGeo
+          ? `<a class="geo-link" href="https://www.google.com/maps?q=${item.latitude},${item.longitude}" target="_blank" rel="noopener">📍 ${item.latitude.toFixed(3)}, ${item.longitude.toFixed(3)}</a>`
+          : `<span class="geo-link geo-none">📍 Ubicación no disponible</span>`;
+
+        row.innerHTML = `
+          <div class="activity-left">
+            <span class="activity-detail">${item.detail}</span>
+            <span class="activity-time">${item.timestamp}${item.user_speed !== null ? ' · ' + item.user_speed.toFixed(2) + 's' : ''}</span>
+            ${geoHtml}
+          </div>
+          <span class="source-pill ${pillClass}">${pillLabel}</span>
+        `;
+        activityFeed.appendChild(row);
+      });
+    } catch (err) {
+      activityFeed.innerHTML = '<div class="activity-empty">No se pudo consultar el historial del servidor.</div>';
+    }
+  }
+
+  document.getElementById('btnRefreshActivity').addEventListener('click', () => {
+    if (currentAccount) loadAccountActivity(currentAccount.account_id);
+  });
 
   // ── PASO 2: Transacción ────────────────────────────────────────────────
   const txnResult = document.getElementById('txnResult');
@@ -380,7 +513,9 @@
           account_id: currentAccount.account_id,
           destination_account,
           amount: amountVal,
-          user_speed
+          user_speed,
+          latitude: currentGeo?.latitude ?? null,
+          longitude: currentGeo?.longitude ?? null
         })
       });
       const data = await res.json();
@@ -390,6 +525,7 @@
         pushLog('TXN_OK', `$${amountVal.toFixed(2)} → ${destination_account} · user_speed=${user_speed}s`);
         document.getElementById('amount').value = '';
         startTimer();
+        loadAccountActivity(currentAccount.account_id);
       } else {
         showResult(txnResult, 'err', data.detail?.message || 'Transferencia rechazada.');
         pushLog('TXN_FAIL', `${destination_account} rechazada`, true);
@@ -407,6 +543,7 @@
     document.getElementById('password').value = '';
     loginResult.className = 'result';
     startTimer();
+    window.scrollTo(0, 0);
   });
 
   function showResult(el, kind, text){
@@ -415,6 +552,7 @@
   }
 
   startTimer();
+  requestGeolocation();
 </script>
 
 </body>

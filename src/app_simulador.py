@@ -15,6 +15,7 @@ import asyncio
 import logging
 import os
 import random
+import re
 import time
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
@@ -24,6 +25,7 @@ import uvicorn
 from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -31,7 +33,7 @@ from pydantic import BaseModel, Field
 # ─────────────────────────────────────────────────────────────────────────────
 
 APP_NAME        = "BGG Banking Simulator"
-APP_VERSION     = "1.3.0"
+APP_VERSION     = "1.6.0"
 APP_DESCRIPTION = "Sandbox de simulación de login bancario — Proyecto Biometric Ghost Gate"
 
 LOG_DIR         = "logs/active"
@@ -208,6 +210,7 @@ async def lifespan(app: FastAPI):
     logger.info(f"STARTUP  | Log operativo: {os.path.abspath(LOG_FILE)}")
     logger.info(f"STARTUP  | Latencia simulada : {LATENCY_MIN_SEC}s – {LATENCY_MAX_SEC}s")
     logger.info(f"STARTUP  | User speed (mock) : {USER_SPEED_MIN_SEC}s – {USER_SPEED_MAX_SEC}s [Escenario B]")
+    logger.info(f"STARTUP  | Frontend Web        : http://0.0.0.0:8000/app/  (compartir vía ngrok como <URL>/app/)")
     logger.info("=" * 70)
     yield
     logger.info("=" * 70)
@@ -241,6 +244,21 @@ app.add_middleware(
     allow_methods     = ["GET", "POST"],
     allow_headers     = ["*"],
 )
+
+# ─────────────────────────────────────────────────────────────────────────────
+# FRONTEND WEB — Sirve frontend/index.html directamente desde el backend.
+# Así el equipo entra con un solo link (el mismo de ngrok) sin necesidad
+# de descargar ni clonar el repositorio: <URL_BACKEND>/app/
+# ─────────────────────────────────────────────────────────────────────────────
+
+FRONTEND_DIR = "frontend"
+
+if os.path.isdir(FRONTEND_DIR):
+    app.mount("/app", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")
+else:
+    logging.getLogger("bgg_simulador").warning(
+        f"STARTUP  | Carpeta '{FRONTEND_DIR}/' no encontrada — /app no estará disponible."
+    )
 
 # ─────────────────────────────────────────────────────────────────────────────
 # MIDDLEWARE — Registro de peticiones (REQUEST LOGGER)
@@ -301,6 +319,20 @@ class LoginRequest(BaseModel):
         ),
         examples=[4.87],
     )
+    latitude: float | None = Field(
+        default=None,
+        ge=-90,
+        le=90,
+        description="Latitud capturada por el navegador (geolocalización del cliente). Opcional.",
+        examples=[19.4326],
+    )
+    longitude: float | None = Field(
+        default=None,
+        ge=-180,
+        le=180,
+        description="Longitud capturada por el navegador (geolocalización del cliente). Opcional.",
+        examples=[-99.1332],
+    )
 
 
 class TransactionRequest(BaseModel):
@@ -328,6 +360,20 @@ class TransactionRequest(BaseModel):
         le=300,
         description="Tiempo real (segundos) que tardó en llenar el formulario de transacción.",
         examples=[6.12],
+    )
+    latitude: float | None = Field(
+        default=None,
+        ge=-90,
+        le=90,
+        description="Latitud capturada por el navegador (geolocalización del cliente). Opcional.",
+        examples=[19.4326],
+    )
+    longitude: float | None = Field(
+        default=None,
+        ge=-180,
+        le=180,
+        description="Longitud capturada por el navegador (geolocalización del cliente). Opcional.",
+        examples=[-99.1332],
     )
 
 
@@ -365,6 +411,24 @@ class TransactionFailResponse(BaseModel):
     status : str
     message: str
     code   : str
+
+
+class AccountActivityItem(BaseModel):
+    """Un evento individual en el historial de actividad de una cuenta."""
+    timestamp   : str
+    event       : str            # AUTH_OK | AUTH_FAIL | TXN_OK | TXN_FAIL
+    detail      : str            # descripción legible del evento
+    source_type : str            # human | simulated
+    user_speed  : float | None = None
+    latitude    : float | None = None
+    longitude   : float | None = None
+
+
+class AccountActivityResponse(BaseModel):
+    """Historial de actividad reciente de una cuenta bancaria."""
+    account_id : str
+    count      : int
+    activity   : list[AccountActivityItem]
 
 
 class HealthResponse(BaseModel):
@@ -425,6 +489,17 @@ def simulate_user_speed() -> float:
     Retorna el tiempo simulado en segundos (float con 2 decimales).
     """
     return round(random.uniform(USER_SPEED_MIN_SEC, USER_SPEED_MAX_SEC), 2)
+
+
+def format_geo_log(latitude: float | None, longitude: float | None) -> str:
+    """
+    Formatea la geolocalización (si viene del navegador) para agregarla
+    al final de la línea de log. Si no viene (bots, navegadores sin
+    permiso de ubicación, etc.), no agrega nada — el campo es opcional.
+    """
+    if latitude is None or longitude is None:
+        return ""
+    return f"geo_lat={latitude:.5f} geo_lon={longitude:.5f}"
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -495,7 +570,8 @@ async def banking_login(payload: LoginRequest):
         f"AUTH     | user={payload.username:<20} "
         f"network_delay={delay_aplicado:.4f}s "
         f"user_speed={user_speed:.2f}s "
-        f"source_type={source_type}"
+        f"source_type={source_type} "
+        f"{format_geo_log(payload.latitude, payload.longitude)}"
     )
 
     # ── Validación mock de credenciales ───────────────────────────────────
@@ -507,7 +583,8 @@ async def banking_login(payload: LoginRequest):
             f"AUTH_FAIL| user={payload.username:<20} "
             f"reason=invalid_credentials "
             f"user_speed={user_speed:.2f}s "
-            f"source_type={source_type}"
+            f"source_type={source_type} "
+            f"{format_geo_log(payload.latitude, payload.longitude)}"
         )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -527,7 +604,8 @@ async def banking_login(payload: LoginRequest):
         f"account={user_data['account_id']} "
         f"type={user_data['account_type']} "
         f"user_speed={user_speed:.2f}s "
-        f"source_type={source_type}"
+        f"source_type={source_type} "
+        f"{format_geo_log(payload.latitude, payload.longitude)}"
     )
 
     return LoginSuccessResponse(
@@ -577,7 +655,8 @@ async def bank_transfer(payload: TransactionRequest):
         f"amount={payload.amount:>10.2f} "
         f"network_delay={delay_aplicado:.4f}s "
         f"user_speed={user_speed:.2f}s "
-        f"source_type={source_type}"
+        f"source_type={source_type} "
+        f"{format_geo_log(payload.latitude, payload.longitude)}"
     )
 
     # ── Validación mock de cuenta destino ──────────────────────────────────
@@ -586,7 +665,8 @@ async def bank_transfer(payload: TransactionRequest):
             f"TXN_FAIL | account={payload.account_id:<15} "
             f"reason=invalid_destination "
             f"user_speed={user_speed:.2f}s "
-            f"source_type={source_type}"
+            f"source_type={source_type} "
+            f"{format_geo_log(payload.latitude, payload.longitude)}"
         )
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -605,7 +685,8 @@ async def bank_transfer(payload: TransactionRequest):
         f"destination={payload.destination_account:<15} "
         f"amount={payload.amount:>10.2f} "
         f"user_speed={user_speed:.2f}s "
-        f"source_type={source_type}"
+        f"source_type={source_type} "
+        f"{format_geo_log(payload.latitude, payload.longitude)}"
     )
 
     return TransactionSuccessResponse(
@@ -616,6 +697,116 @@ async def bank_transfer(payload: TransactionRequest):
         destination_account = payload.destination_account,
         amount              = payload.amount,
         processed_at        = processed_at,
+    )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PARSEO DEL LOG — Utilidad para reconstruir actividad por cuenta
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Ejemplo de línea real generada por el logger:
+# 2026-08-07T16:52:00 UTC | INFO     | AUTH_OK  | user=cliente_001 account=MX-4821-0001 type=PREMIUM user_speed=7.43s source_type=human
+LOG_LINE_PATTERN = re.compile(
+    r"^(?P<timestamp>\S+) UTC \| \S+\s*\| (?P<event>AUTH_OK|AUTH_FAIL|TXN_OK|TXN_FAIL)\s*\|\s*(?P<rest>.+)$"
+)
+
+
+def parse_account_activity(account_id: str, limit: int = 20) -> list[AccountActivityItem]:
+    """
+    Lee bgg_operativo.log de atrás hacia adelante y devuelve los eventos
+    (login y transacciones) donde la cuenta indicada participó, ya sea
+    como cuenta propia (account=) o como destino de una transferencia
+    (destination=).
+    """
+    if not os.path.exists(LOG_FILE):
+        return []
+
+    resultados: list[AccountActivityItem] = []
+
+    with open(LOG_FILE, "r", encoding="utf-8") as f:
+        lineas = f.readlines()
+
+    for linea in reversed(lineas):
+        if len(resultados) >= limit:
+            break
+
+        match = LOG_LINE_PATTERN.match(linea.strip())
+        if not match:
+            continue
+
+        event = match.group("event")
+        rest  = match.group("rest")
+
+        # Solo nos interesan líneas donde aparezca esta cuenta,
+        # ya sea como cuenta propia o como destino de una transferencia.
+        if f"account={account_id}" not in rest and f"destination={account_id}" not in rest:
+            continue
+
+        source_type_match = re.search(r"source_type=(\S+)", rest)
+        user_speed_match  = re.search(r"user_speed=([\d.]+)s", rest)
+        amount_match      = re.search(r"amount=\s*([\d.]+)", rest)
+        destination_match = re.search(r"destination=(\S+)", rest)
+        geo_lat_match     = re.search(r"geo_lat=(-?[\d.]+)", rest)
+        geo_lon_match     = re.search(r"geo_lon=(-?[\d.]+)", rest)
+
+        source_type = source_type_match.group(1) if source_type_match else "unknown"
+        user_speed  = float(user_speed_match.group(1)) if user_speed_match else None
+        latitude    = float(geo_lat_match.group(1)) if geo_lat_match else None
+        longitude   = float(geo_lon_match.group(1)) if geo_lon_match else None
+
+        # Descripción legible según el tipo de evento
+        if event == "AUTH_OK":
+            detail = "Inicio de sesión exitoso"
+        elif event == "AUTH_FAIL":
+            detail = "Intento de inicio de sesión fallido"
+        elif event == "TXN_OK":
+            monto = amount_match.group(1) if amount_match else "?"
+            dest  = destination_match.group(1) if destination_match else "?"
+            detail = f"Transferencia enviada: ${monto} → {dest}"
+        else:  # TXN_FAIL
+            detail = "Transferencia rechazada"
+
+        resultados.append(AccountActivityItem(
+            timestamp   = match.group("timestamp"),
+            event       = event,
+            detail      = detail,
+            source_type = source_type,
+            user_speed  = user_speed,
+            latitude    = latitude,
+            longitude   = longitude,
+        ))
+
+    return resultados
+
+
+@app.get(
+    "/api/v1/accounts/{account_id}/activity",
+    response_model=AccountActivityResponse,
+    summary="Historial de actividad de una cuenta",
+    tags=["Cuentas"],
+)
+async def account_activity(account_id: str, limit: int = 20):
+    """
+    ## Historial de actividad reciente de una cuenta bancaria.
+
+    Lee `bgg_operativo.log` y devuelve los últimos eventos (logins y
+    transferencias, exitosos o fallidos) donde la cuenta indicada
+    participó — ya sea como titular o como cuenta destino.
+
+    Cada evento incluye `source_type` (`human` o `simulated`), así el
+    Frontend puede mostrar si una transacción vino de una persona real
+    o de un script/bot — justo lo que se necesita para ver, al iniciar
+    sesión, si el bot usó esta misma cuenta anteriormente.
+
+    **Parámetros:**
+    - `account_id`: cuenta a consultar (ej. `MX-4821-0001`)
+    - `limit`: máximo de eventos a devolver (default 20)
+    """
+    eventos = parse_account_activity(account_id, limit=limit)
+    return AccountActivityResponse(
+        account_id = account_id,
+        count      = len(eventos),
+        activity   = eventos,
     )
 
 
