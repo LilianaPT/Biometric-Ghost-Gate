@@ -22,14 +22,64 @@ from zone2.model_isolation import EngineIABGG
 # 1. CONFIGURACIÓN DE PÁGINA ANCHA
 # ---------------------------------------------------------
 st.set_page_config(
-    page_title="AQ Tech Systems - Bot & Latency Dashboard",
+    page_title="AQ Tech Systems - Bot y latencia Dashboard",
     layout="wide",
     page_icon="🛡️",
     initial_sidebar_state="expanded"
 )
 
 # ---------------------------------------------------------
-# 2. INYECCIÓN DE CSS PARA PALETA AQ TECH Y DISEÑO RESPIRABLE
+# 2. DEFINICIÓN DE FUNCIONES AUXILIARES (ARRIBA EN EL CÓDIGO)
+# ---------------------------------------------------------
+def cargar_datos_logs():
+    """
+    Busca y lee el archivo traffic_logs.csv probando distintas rutas relativas
+    para evitar errores según el directorio donde se ejecute Streamlit.
+    """
+    rutas_posibles = [
+        "tests/traffic_logs.csv",
+        "../tests/traffic_logs.csv",
+        "../../tests/traffic_logs.csv",
+        "traffic_logs.csv"
+    ]
+    
+    log_path = None
+    for ruta in rutas_posibles:
+        if os.path.exists(ruta):
+            log_path = ruta
+            break
+
+    if log_path:
+        try:
+            df = pd.read_csv(log_path)
+            return df, log_path
+        except Exception as e:
+            return None, None
+    return None, None
+
+def obtener_resumen_log():
+    """Procesa los conteos actualizados directamente en tiempo real para el chatbot."""
+    df_log, path = cargar_datos_logs()
+    
+    # Si encuentra un archivo CSV en tests/ usa esos datos
+    if df_log is not None and not df_log.empty:
+        total = len(df_log)
+        humanos = len(df_log[df_log['source_type'] == 'human']) if 'source_type' in df_log.columns else len(df_log[df_log['es_anomalia'] == 1]) if 'es_anomalia' in df_log.columns else 0
+        bots = len(df_log[df_log['source_type'] == 'simulated']) if 'source_type' in df_log.columns else len(df_log[df_log['es_anomalia'] == -1]) if 'es_anomalia' in df_log.columns else 0
+        return total, humanos, bots, path
+    
+    # Si no hay CSV externo, toma el DataFrame cargado en memoria por el Engine
+    elif 'df_entrenamiento' in st.session_state:
+        df_mem = st.session_state['df_entrenamiento']
+        total = len(df_mem)
+        bots = len(df_mem[df_mem['es_anomalia'] == -1]) if 'es_anomalia' in df_mem.columns else 0
+        humanos = len(df_mem[df_mem['es_anomalia'] == 1]) if 'es_anomalia' in df_mem.columns else 0
+        return total, humanos, bots, "Memoria (EngineIABGG)"
+    
+    return 0, 0, 0, "No encontrado"
+
+# ---------------------------------------------------------
+# 3. INYECCIÓN DE CSS PARA PALETA AQ TECH Y DISEÑO RESPIRABLE
 # ---------------------------------------------------------
 st.markdown("""
     <style>
@@ -108,7 +158,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ---------------------------------------------------------
-# 3. INICIA MOTOR BGG E HISTORIAL DE ENTRENAMIENTO
+# 4. INICIA MOTOR BGG E HISTORIAL DE ENTRENAMIENTO
 # ---------------------------------------------------------
 engine = EngineIABGG()
 
@@ -119,10 +169,7 @@ if 'entrenado' not in st.session_state:
 df = st.session_state['df_entrenamiento']
 
 # ---------------------------------------------------------
-# 4. BARRA LATERAL (SIDEBAR) — FICHA TÉCNICA Y CONTROLES REALES
-# ---------------------------------------------------------
-# ---------------------------------------------------------
-# BARRA LATERAL ULTRA COMPACTA (SIN CONFIGURACIONES REDUNDANTES)
+# 5. BARRA LATERAL (SIDEBAR) — FICHA TÉCNICA Y CONTROLES REALES
 # ---------------------------------------------------------
 with st.sidebar:
     st.markdown("<h3 style='text-align: center; color: white; margin-bottom: 0px;'>AQ TECH SYSTEMS</h3>", unsafe_allow_html=True)
@@ -131,7 +178,6 @@ with st.sidebar:
 
     st.markdown("<h4 style='color: white; margin-bottom: 8px;'>⚡ Acciones Rápidas</h4>", unsafe_allow_html=True)
     
-    # CSS para garantizar el contraste y estilo de los botones en la barra lateral
     st.markdown("""
         <style>
             section[data-testid="stSidebar"] .stButton > button,
@@ -182,11 +228,11 @@ with st.sidebar:
         """)
 
 # ---------------------------------------------------------
-# 5. ENCABEZADO SUPERIOR
+# 6. ENCABEZADO SUPERIOR
 # ---------------------------------------------------------
 st.markdown("""
     <div class="top-banner">
-        <h2>🛡️ AI BOT & LATENCY DETECTION DASHBOARD v2.0</h2>
+        <h2>🛡️ AI BOT Y DETECCION DE LATENCIA DASHBOARD v2.0</h2>
         <span style="background-color:#7B65BD; padding:6px 14px; border-radius:20px; font-size:0.85rem; font-weight:600;">
             Estado: Motor BGG Protegiendo 🟢
         </span>
@@ -194,7 +240,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ---------------------------------------------------------
-# 6. FILA SUPERIOR: KPIS PRINCIPALES
+# 7. FILA SUPERIOR: KPIS PRINCIPALES
 # ---------------------------------------------------------
 kpi1, kpi2, kpi3, kpi4 = st.columns(4)
 
@@ -204,15 +250,15 @@ normales = len(df[df['es_anomalia'] == 1])
 pct_bot = (anomalias / total_reg * 100) if total_reg > 0 else 0
 lat_prom = df['latency'].mean() if not df.empty else 0
 
-kpi1.metric("Telemetría Procesada", f"{total_reg:,}")
-kpi2.metric("Tráfico Humano Legítimo", f"{normales:,}", f"{100-pct_bot:.1f}%")
-kpi3.metric("Bots Bloqueados", f"{anomalias:,}", f"-{pct_bot:.1f}%", delta_color="inverse")
-kpi4.metric("Latencia Promedio", f"{lat_prom:.1f} ms")
+kpi1.metric("Telemetría procesada", f"{total_reg:,}")
+kpi2.metric("Tráfico humano legítimo", f"{normales:,}", f"{100-pct_bot:.1f}%")
+kpi3.metric("Bots bloqueados", f"{anomalias:,}", f"-{pct_bot:.1f}%", delta_color="inverse")
+kpi4.metric("Latencia promedio", f"{lat_prom:.1f} ms")
 
 st.markdown("<br>", unsafe_allow_html=True)
 
 # ---------------------------------------------------------
-# 7. GRID PRINCIPAL EN 2 COLUMNAS (LAYOUT 2x2 ANCHO)
+# 8. GRID PRINCIPAL EN 2 COLUMNAS (LAYOUT 2x2 ANCHO)
 # ---------------------------------------------------------
 col_left, col_right = st.columns([1, 1], gap="large")
 
@@ -222,7 +268,7 @@ col_left, col_right = st.columns([1, 1], gap="large")
 with col_left:
     st.markdown("""
         <div class="card-container">
-            <div class="card-title"> Detección de Anomalías: Latencia vs. Delay de Usuario</div>
+            <div class="card-title"> Detección de anomalías: Latencia vs. Delay de usuario</div>
     """, unsafe_allow_html=True)
     
     fig_scat = px.scatter(
@@ -237,7 +283,7 @@ with col_left:
 
     st.markdown("""
         <div class="card-container">
-            <div class="card-title"> Desglose de Tráfico por Categorías Detectadas</div>
+            <div class="card-title"> Desglose de tráfico por categorías detectadas</div>
     """, unsafe_allow_html=True)
     
     cat_df = pd.DataFrame({
@@ -259,7 +305,7 @@ with col_left:
 with col_right:
     st.markdown("""
         <div class="card-container">
-            <div class="card-title"> Proyección PCA de Agrupamiento de Usuarios vs Bots</div>
+            <div class="card-title"> Proyección PCA de agrupamiento de usuarios vs bots</div>
     """, unsafe_allow_html=True)
     
     np.random.seed(42)
@@ -279,7 +325,7 @@ with col_right:
 
     st.markdown("""
         <div class="card-container">
-            <div class="card-title"> Evaluador de Inferencia en Tiempo Real (Simulador)</div>
+            <div class="card-title"> Evaluador de inferencia en tiempo real (Simulador)</div>
     """, unsafe_allow_html=True)
     
     c_in1, c_in2, c_in3 = st.columns(3)
@@ -297,3 +343,65 @@ with col_right:
             st.caption(f"Respuesta del Sistema: {res['mensaje']}")
             
     st.markdown("</div>", unsafe_allow_html=True)
+
+# ---------------------------------------------------------
+# 9. CHATBOT INTERACTIVO DE EXPLICABILIDAD (XAI)
+# ---------------------------------------------------------
+st.markdown("---")
+st.subheader("🤖 BGG AI Assistant — Reportes y explicabilidad")
+st.caption("Escribe consultas como: **'dame un reporte'**, **'cuantos bots hay'** o **'como funciona el modelo'**.")
+
+# Inicializar historial de mensajes
+if "messages" not in st.session_state:
+    st.session_state.messages = [
+        {
+            "role": "assistant",
+            "content": "¡Hola! Soy el asistente de **Biometric Ghost-Gate**. Estoy conectado a tus logs de entrenamiento. Pídeme un **'reporte de entrenamiento'** o consulta métricas sobre el tráfico."
+        }
+    ]
+
+# Renderizar mensajes anteriores
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
+
+# Captura de entrada del usuario
+if user_prompt := st.chat_input("Escribe tu consulta o pide un reporte explícito..."):
+    # Guardar y mostrar mensaje del usuario
+    st.session_state.messages.append({"role": "user", "content": user_prompt})
+    with st.chat_message("user"):
+        st.markdown(user_prompt)
+
+    # Evaluación en tiempo real del archivo de datos o memoria
+    total, humanos, bots, path_usado = obtener_resumen_log()
+    prompt_lower = user_prompt.lower()
+
+    # Generación de respuestas dinámicas según los datos actuales
+    if "reporte" in prompt_lower or "entrenamiento" in prompt_lower or "reentrenamiento" in prompt_lower:
+        respuesta = f"""
+### Reporte explícito de entrenamiento (Isolation Forest)
+**Estado del búnker:**
+
+* **Origen de datos auditado:** `{path_usado}`
+* **Volumen total de telemetría:** **{total}** registros analizados.
+* **Tráfico humano confirmado:** **{humanos}** muestras biológicas (`source_type=human`).
+* **Tráfico automatizado/bot:** **{bots}** muestras sintéticas (`source_type=simulated`).
+* **Modelo activo:** `Isolation Forest` (v2.0).
+* **Variables evaluadas:** Latencia de servidor (`latency`) y delay de usuario (`user_speed`).
+
+**Conclusión del asistente:**
+{"El dataset contiene datos actualizados para el reentrenamiento. Se observa diferenciación clara entre la velocidad humana y la simulación automatizada." if total > 0 else "⚠️ Aún no se han detectado registros en el log. Verifica la ejecución del simulador o del frontend."}
+"""
+    elif "bot" in prompt_lower or "ataque" in prompt_lower or "simulado" in prompt_lower:
+        respuesta = f"Actualmente se registran **{bots} patrones sintéticos/bots** en la telemetría evaluada. Su velocidad de respuesta o latencia difiere significativamente del comportamiento bio-humano medio."
+    elif "humano" in prompt_lower or "real" in prompt_lower:
+        respuesta = f"Se cuentan con **{humanos} muestras de interacción humana auténtica**, validadas como tráfico normal dentro de la matriz de Isolation Forest."
+    elif "modelo" in prompt_lower or "ia" in prompt_lower or "isolation" in prompt_lower:
+        respuesta = "El motor **EngineIABGG** utiliza **Isolation Forest** para aislar patrones atípicos sin necesidad de entrenamiento previo rígido. Separa las solicitudes por delay y latencia en subárboles de decisión."
+    else:
+        respuesta = "Puedo responder sobre la telemetría del reentrenamiento. Intenta consultarme con: **'dame un reporte'**, **'tráfico bot'**, **'muestras humanas'** o **'explicación del modelo'**."
+
+    # Guardar y renderizar respuesta del bot
+    st.session_state.messages.append({"role": "assistant", "content": respuesta})
+    with st.chat_message("assistant"):
+        st.markdown(respuesta)

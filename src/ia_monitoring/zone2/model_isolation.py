@@ -5,9 +5,9 @@
 Descripción: Implementación de Isolation Forest para la detección de 
              comportamientos anómalos y ráfagas automatizadas (Bots). 
              Soporta entrenamiento multilog, generación de métricas de 
-             evaluación, evaluación en tiempo real y exportación de 
-             binarios portátiles (.joblib).
-VERSIÓN:     1.2.0
+             evaluación, evaluación en tiempo real con auto-carga de 
+             modelos ajustados y exportación de binarios (.joblib).
+VERSIÓN:     1.2.1
 =========================================================================
 """
 
@@ -18,6 +18,7 @@ import joblib
 import numpy as np
 import pandas as pd
 from sklearn.ensemble import IsolationForest
+
 
 class EngineIABGG:
     def __init__(self, ruta_log=None, ruta_modelo=None):
@@ -107,7 +108,7 @@ class EngineIABGG:
     def entrenar_y_guardar(self) -> pd.DataFrame:
         """
         Entrena el modelo con todos los registros acumulados en los logs,
-        calcula los score de anomalía y exporta el binario .joblib para la VM.
+        calcula los scores de anomalía y exporta el binario .joblib para la VM.
         """
         df = self.cargar_datos_desde_log()
         
@@ -127,26 +128,37 @@ class EngineIABGG:
 
     def cargar_modelo_exportado(self) -> bool:
         """
-        Carga el binario .joblib generado si existe en disco duro.
+        Carga el binario .joblib generado si existe en el almacenamiento.
         """
         if os.path.exists(self.ruta_modelo):
-            self.model = joblib.load(self.ruta_modelo)
-            return True
+            try:
+                self.model = joblib.load(self.ruta_modelo)
+                return True
+            except Exception:
+                return False
         return False
 
     def evaluar_transaccion(self, status_code: int, latency: float, user_speed: float) -> dict:
         """
-        Inspecciona una transacción individual en tiempo real para determinar si debe
-        bloquearse por comportamiento de Bot o autorizarse como tráfico humano.
+        Inspecciona una transacción individual en tiempo real.
+        Garantiza que el modelo esté ajustado (fitted) antes de ejecutar la inferencia.
         """
+        # 1. Comprobar si el estimador ya fue ajustado (fit) en memoria
+        if not hasattr(self.model, "estimators_") or len(self.model.estimators_) == 0:
+            cargado = self.cargar_modelo_exportado()
+            
+            # 2. Si no existe un archivo .joblib previo, entrenar automáticamente de respaldo
+            if not cargado:
+                self.entrenar_y_guardar()
+
         status_score = 1.0 if status_code == 200 else 0.0
         features = np.array([[status_score, latency, user_speed]])
         
-        # Inferencia con Isolation Forest
+        # Inferencia en tiempo real con Isolation Forest
         prediccion = self.model.predict(features)[0]
         anomaly_score = float(self.model.decision_function(features)[0])
         
-        # Regla de decisión y detección de ráfagas automatizadas
+        # Regla de decisión y detección de ráfagas automatizadas (Bots)
         if prediccion == -1 or user_speed < 0.15:
             return {
                 "resultado": "ANOMALIA_DETECTADA_BLOQUEAR",
