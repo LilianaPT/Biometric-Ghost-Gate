@@ -22,6 +22,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 import uvicorn
+import httpx
 from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -33,7 +34,7 @@ from pydantic import BaseModel, Field
 # ─────────────────────────────────────────────────────────────────────────────
 
 APP_NAME        = "BGG Banking Simulator"
-APP_VERSION     = "1.6.0"
+APP_VERSION     = "1.9.0"
 APP_DESCRIPTION = "Sandbox de simulación de login bancario — Proyecto Biometric Ghost Gate"
 
 LOG_DIR         = "logs/active"
@@ -49,6 +50,35 @@ LATENCY_MAX_SEC = 1.5
 # Rango típico humano: 2s (usuario experto) a 15s (usuario lento/distraído)
 USER_SPEED_MIN_SEC = 2.0
 USER_SPEED_MAX_SEC = 15.0
+
+# ─────────────────────────────────────────────────────────────────────────────
+# API DE IA (Angela) — Servicio externo de detección de bots
+# ─────────────────────────────────────────────────────────────────────────────
+
+# URL del servicio de Angela (api.py, endpoint POST /api/v1/predict).
+# Puede sobreescribirse con la variable de entorno AI_API_URL sin tocar
+# código — útil porque el servicio de Angela puede correr en otro puerto
+# de la misma VM, o en otra máquina/túnel de ngrok por separado.
+AI_API_URL = os.environ.get("AI_API_URL", "http://localhost:9000/api/v1/predict")
+
+# Tiempo máximo de espera a la API de Angela antes de seguir sin bloquear
+# el login del usuario — nunca debe tumbar el banco por un servicio externo lento
+AI_API_TIMEOUT_SECONDS = 6.0  # más holgado: la 1a llamada puede disparar el entrenamiento automático de Angela
+
+# Umbral de confianza para considerar una petición como sospechosa, usado
+# solo si la respuesta de Angela trae un score/probabilidad numérico en
+# lugar de un booleano directo (ver interpret_ai_result más abajo).
+AI_SUSPICION_THRESHOLD = 0.75
+
+# Duración del cierre automático de sesión — tanto para el intento humano
+# legítimo como para el bot, sobre la misma cuenta. Se levanta solo, sin
+# que nadie tenga que desbloquear nada.
+AUTO_CLOSE_SECONDS = 5 * 60  # 5 minutos
+
+# Webhook opcional para avisar a los administradores en Discord cuando se
+# detecta un bot (Configuración → Integraciones → Webhooks en el canal).
+# Si no se configura, el aviso solo queda en el log y en /api/v1/alerts.
+ADMIN_DISCORD_WEBHOOK = os.environ.get("ADMIN_DISCORD_WEBHOOK", "")
 
 # ─────────────────────────────────────────────────────────────────────────────
 # DATOS MOCK — Credenciales bancarias simuladas
@@ -199,6 +229,152 @@ def setup_logging() -> logging.Logger:
 logger = setup_logging()
 
 # ─────────────────────────────────────────────────────────────────────────────
+# CLIENTE HTTP HACIA LA API DE IA DE ANGELA (servicio externo, api.py)
+# ─────────────────────────────────────────────────────────────────────────────
+
+ai_api_status = "sin_verificar"   # sin_verificar | activo | inalcanzable
+
+
+def interpret_ai_result(resultado: dict) -> dict:
+    """
+    Interpreta la respuesta real de engine.evaluar_transaccion()
+    (confirmada en model_isolation.py — Isolation Forest de Angela):
+
+        {
+          "resultado": "ANOMALIA_DETECTADA_BLOQUEAR" | "APROBADO_CON_ALTA_LATENCIA" | "ACCESO_NORMAL_VALIDADO",
+          "bloquear": bool,          <- señal principal, ya viene decidida
+          "codigo_http": int,
+          "mensaje": str,            <- texto humano, útil para el aviso
+          "anomaly_score": float,    <- score crudo de Isolation Forest
+        }
+
+    Se queda con "bloquear" como fuente de verdad (así Angela puede seguir
+    ajustando sus reglas internas — ej. el umbral de user_speed < 0.15s —
+    sin que este backend tenga que cambiar). Si algún día el formato
+    cambia o el campo no viene, no se actúa (nunca cierra sesiones por
+    un parseo equivocado).
+    """
+    if not isinstance(resultado, dict) or "bloquear" not in resultado:
+        return {"is_bot": False, "score": None, "mensaje": None, "raw": resultado, "reconocido": False}
+
+    return {
+        "is_bot":  bool(resultado["bloquear"]),
+        "score":   resultado.get("anomaly_score"),
+        "mensaje": resultado.get("mensaje"),
+        "raw":     resultado,
+        "reconocido": True,
+    }
+
+
+async def assess_request(user_speed: float, network_delay: float, has_geolocation: bool) -> dict:
+    """
+    Llama a la API externa de Angela (POST /api/v1/predict) para clasificar
+    el intento actual. Si el servicio no responde a tiempo o falla, el login
+    sigue su curso normal sin bloquear nada — nunca se tumba el banco por
+    un servicio de IA externo caído.
+
+    IMPORTANTE — conversión de unidades: el modelo de Angela se entrenó con
+    latencia en MILISEGUNDOS (su regla "latency > 1000.0" solo tiene sentido
+    en ms) mientras que nuestro network_delay interno está en SEGUNDOS
+    (0.1–1.5s). Hay que convertir antes de mandarlo o sus reglas nunca se
+    activan correctamente.
+    """
+    global ai_api_status
+
+    payload = {
+        "status_code": 200,
+        "latency": round(network_delay * 1000, 2),   # segundos → milisegundos
+        "user_speed": user_speed,                     # ya está en segundos, igual que ella lo espera
+    }
+
+    try:
+        async with httpx.AsyncClient(timeout=AI_API_TIMEOUT_SECONDS) as client:
+            response = await client.post(AI_API_URL, json=payload)
+            response.raise_for_status()
+            resultado = response.json()
+        ai_api_status = "activo"
+        return interpret_ai_result(resultado)
+    except Exception as e:
+        ai_api_status = "inalcanzable"
+        logger.warning(f"AI_API   | No se pudo contactar la API de Angela ({AI_API_URL}): {e}")
+        return {"is_bot": False, "score": None, "mensaje": None, "raw": None, "reconocido": False}
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CIERRE AUTOMÁTICO DE SESIÓN (5 min) + AVISO A ADMINISTRADORES
+# ─────────────────────────────────────────────────────────────────────────────
+# Ya no hay bloqueo indefinido ni decisión humana para desbloquear: al
+# detectar un bot, la cuenta se cierra sola por 5 minutos (afecta tanto al
+# intento humano legítimo como al del bot, porque ambos comparten la misma
+# cuenta) y se manda un aviso. Pasado el tiempo, se reabre sin que nadie
+# tenga que hacer nada.
+
+closed_accounts: dict[str, float] = {}   # {account_id: se_reabre_en (epoch)}
+pending_alerts: list[dict] = []           # historial de avisos ya enviados
+
+
+def is_account_closed(account_id: str) -> bool:
+    reabre_en = closed_accounts.get(account_id)
+    if reabre_en is None:
+        return False
+    if time.time() >= reabre_en:
+        del closed_accounts[account_id]
+        return False
+    return True
+
+
+async def notify_admins(alerta: dict):
+    """
+    Aviso a los administradores. Siempre queda en el log y en
+    /api/v1/alerts; si configuran ADMIN_DISCORD_WEBHOOK también se manda
+    un mensaje al canal de Discord del equipo.
+    """
+    logger.warning(
+        f"AI_ALERT | ¡BOT DETECTADO! account={alerta['account_id']:<15} "
+        f"user={alerta['username']:<20} anomaly_score={alerta['score']} "
+        f"mensaje_ia=\"{alerta['mensaje']}\" "
+        f"sesión cerrada {AUTO_CLOSE_SECONDS // 60} min — aviso enviado a administradores"
+    )
+
+    if not ADMIN_DISCORD_WEBHOOK:
+        return
+
+    mensaje = (
+        f"🚨 **Bot detectado en BGG**\n"
+        f"Cuenta: `{alerta['account_id']}` (usuario: `{alerta['username']}`)\n"
+        f"{alerta['mensaje'] or 'Anomalía detectada por el modelo de Angela'}\n"
+        f"Anomaly score: `{alerta['score']}`\n"
+        f"Sesión cerrada por {AUTO_CLOSE_SECONDS // 60} minutos (se reabre sola).\n"
+        f"Hora: {alerta['timestamp']}"
+    )
+    try:
+        async with httpx.AsyncClient(timeout=3.0) as client:
+            await client.post(ADMIN_DISCORD_WEBHOOK, json={"content": mensaje})
+    except Exception as e:
+        logger.warning(f"AI_ALERT | No se pudo enviar el aviso a Discord: {e}")
+
+
+async def close_session_and_notify(account_id: str, username: str, score, mensaje: str | None = None) -> dict:
+    """
+    Ejecuta el cierre automático de 5 minutos y dispara el aviso a
+    administradores. Retorna la alerta generada.
+    """
+    reabre_en = time.time() + AUTO_CLOSE_SECONDS
+    closed_accounts[account_id] = reabre_en
+
+    alerta = {
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "account_id": account_id,
+        "username": username,
+        "score": score,
+        "mensaje": mensaje,
+        "reabre_en": datetime.fromtimestamp(reabre_en, tz=timezone.utc).isoformat(),
+    }
+    pending_alerts.append(alerta)
+    await notify_admins(alerta)
+    return alerta
+
+# ─────────────────────────────────────────────────────────────────────────────
 # CICLO DE VIDA DE LA APLICACIÓN (Lifespan)
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -211,6 +387,7 @@ async def lifespan(app: FastAPI):
     logger.info(f"STARTUP  | Latencia simulada : {LATENCY_MIN_SEC}s – {LATENCY_MAX_SEC}s")
     logger.info(f"STARTUP  | User speed (mock) : {USER_SPEED_MIN_SEC}s – {USER_SPEED_MAX_SEC}s [Escenario B]")
     logger.info(f"STARTUP  | Frontend Web        : http://0.0.0.0:8000/app/  (compartir vía ngrok como <URL>/app/)")
+    logger.info(f"STARTUP  | API de IA (Angela) configurada en: {AI_API_URL}")
     logger.info("=" * 70)
     yield
     logger.info("=" * 70)
@@ -547,9 +724,15 @@ async def banking_login(payload: LoginRequest):
     **Flujo:**
     1. Recibe `username` y `password` en el body JSON.
     2. Introduce un **delay aleatorio** (0.1 – 1.5 s) para simular latencia de red.
-    3. Valida contra el dataset mock de usuarios.
-    4. Retorna `200 OK` con token simulado si las credenciales son correctas.
-    5. Retorna `401 Unauthorized` si las credenciales son incorrectas.
+    3. Si la cuenta tiene un cierre automático activo (bot detectado hace
+       poco), rechaza con `423 Locked` — afecta tanto al intento humano
+       legítimo como al del bot, ya que comparten la misma cuenta.
+    4. La API de Angela (servicio externo) clasifica el intento en tiempo
+       real. Si detecta un bot, cierra la sesión de la cuenta por 5 minutos
+       (se reabre sola, sin intervención humana) y avisa a los administradores.
+    5. Valida contra el dataset mock de usuarios.
+    6. Retorna `200 OK` con token simulado si las credenciales son correctas.
+    7. Retorna `401 Unauthorized` si las credenciales son incorrectas.
 
     **Usuarios de prueba disponibles (15 en total):**
     Ver tabla completa en README.md → sección "Usuarios Mock".
@@ -574,9 +757,52 @@ async def banking_login(payload: LoginRequest):
         f"{format_geo_log(payload.latitude, payload.longitude)}"
     )
 
-    # ── Validación mock de credenciales ───────────────────────────────────
     user_data = MOCK_USERS.get(payload.username)
 
+    # ── Cierre automático activo — rechaza incluso con contraseña correcta ──
+    if user_data is not None and is_account_closed(user_data["account_id"]):
+        logger.warning(
+            f"AUTH_CLOSED| user={payload.username:<20} account={user_data['account_id']} "
+            f"reason=auto_close_active"
+        )
+        raise HTTPException(
+            status_code=423,
+            detail={
+                "status": "error",
+                "message": "Sesión cerrada temporalmente por seguridad. Vuelve a intentar en unos minutos.",
+                "code": "AI_SESSION_AUTO_CLOSED",
+            },
+        )
+
+    # ── Clasificación en tiempo real con la API de Angela ───────────────
+    has_geo = payload.latitude is not None and payload.longitude is not None
+    ai_result = await assess_request(user_speed, delay_aplicado, has_geo)
+
+    logger.info(
+        f"AI_PREDICT | user={payload.username:<20} "
+        f"is_bot={ai_result['is_bot']} score={ai_result['score']} "
+        f"mensaje_ia=\"{ai_result['mensaje']}\" "
+        f"formato_reconocido={ai_result['reconocido']}"
+    )
+
+    if ai_result["is_bot"] and user_data is not None:
+        await close_session_and_notify(
+            account_id = user_data["account_id"],
+            username   = payload.username,
+            score      = ai_result["score"],
+            mensaje    = ai_result["mensaje"],
+        )
+        raise HTTPException(
+            status_code=423,
+            detail={
+                "status": "error",
+                "message": f"Bot detectado. Sesión cerrada por {AUTO_CLOSE_SECONDS // 60} minutos y se avisó a los administradores.",
+                "code": "AI_BOT_DETECTED",
+                "score": ai_result["score"],
+            },
+        )
+
+    # ── Validación mock de credenciales ───────────────────────────────────
     # Usuario no existe O contraseña incorrecta (mismo mensaje: evita user enumeration)
     if user_data is None or user_data["password"] != payload.password:
         logger.warning(
@@ -584,6 +810,7 @@ async def banking_login(payload: LoginRequest):
             f"reason=invalid_credentials "
             f"user_speed={user_speed:.2f}s "
             f"source_type={source_type} "
+            f"ai_score={ai_result['score']} "
             f"{format_geo_log(payload.latitude, payload.longitude)}"
         )
         raise HTTPException(
@@ -605,6 +832,7 @@ async def banking_login(payload: LoginRequest):
         f"type={user_data['account_type']} "
         f"user_speed={user_speed:.2f}s "
         f"source_type={source_type} "
+        f"ai_score={ai_result['score']} "
         f"{format_geo_log(payload.latitude, payload.longitude)}"
     )
 
@@ -636,6 +864,11 @@ async def bank_transfer(payload: TransactionRequest):
     Igual que el login, mide `user_speed` (Escenario A si viene del
     Frontend Web con medición real, Escenario B/simulado si no).
 
+    También pasa por la misma clasificación de IA que el login: si la
+    cuenta está cerrada temporalmente, o si la API de Angela marca esta
+    transferencia como sospechosa, se rechaza con `423` y se dispara el
+    mismo cierre de 5 minutos + aviso a administradores.
+
     **Cuentas destino válidas (mock):**
     `MX-4821-0001`, `MX-4821-0002`, `MX-0000-ADMIN`,
     `MX-9012-3344`, `MX-9012-3355`, `MX-9012-3366`
@@ -658,6 +891,48 @@ async def bank_transfer(payload: TransactionRequest):
         f"source_type={source_type} "
         f"{format_geo_log(payload.latitude, payload.longitude)}"
     )
+
+    # ── Cierre automático activo — rechaza incluso si los datos son válidos ──
+    if is_account_closed(payload.account_id):
+        logger.warning(
+            f"TXN_CLOSED| account={payload.account_id:<15} reason=auto_close_active"
+        )
+        raise HTTPException(
+            status_code=423,
+            detail={
+                "status": "error",
+                "message": "Sesión cerrada temporalmente por seguridad. Vuelve a intentar en unos minutos.",
+                "code": "AI_SESSION_AUTO_CLOSED",
+            },
+        )
+
+    # ── Clasificación en tiempo real con la API de Angela ───────────────
+    has_geo = payload.latitude is not None and payload.longitude is not None
+    ai_result = await assess_request(user_speed, delay_aplicado, has_geo)
+
+    logger.info(
+        f"AI_PREDICT | account={payload.account_id:<15} "
+        f"is_bot={ai_result['is_bot']} score={ai_result['score']} "
+        f"mensaje_ia=\"{ai_result['mensaje']}\" "
+        f"formato_reconocido={ai_result['reconocido']}"
+    )
+
+    if ai_result["is_bot"]:
+        await close_session_and_notify(
+            account_id = payload.account_id,
+            username   = payload.account_id,   # las transferencias no traen username, se usa la cuenta
+            score      = ai_result["score"],
+            mensaje    = ai_result["mensaje"],
+        )
+        raise HTTPException(
+            status_code=423,
+            detail={
+                "status": "error",
+                "message": f"Bot detectado. Sesión cerrada por {AUTO_CLOSE_SECONDS // 60} minutos y se avisó a los administradores.",
+                "code": "AI_BOT_DETECTED",
+                "score": ai_result["score"],
+            },
+        )
 
     # ── Validación mock de cuenta destino ──────────────────────────────────
     if payload.destination_account not in MOCK_DESTINATION_ACCOUNTS:
@@ -808,6 +1083,44 @@ async def account_activity(account_id: str, limit: int = 20):
         count      = len(eventos),
         activity   = eventos,
     )
+
+
+@app.get(
+    "/api/v1/ai/status",
+    summary="Estado de la API de IA (Angela)",
+    tags=["IA"],
+)
+async def ai_status():
+    """
+    Confirma si la API de Angela (servicio externo, api.py) respondió
+    correctamente la última vez que se le llamó. Útil para verificar la
+    conexión sin tener que hacer un login completo.
+    """
+    return {
+        "ai_api_status": ai_api_status,
+        "ai_api_url": AI_API_URL,
+        "umbral_sospecha_si_score_numerico": AI_SUSPICION_THRESHOLD,
+        "duracion_cierre_automatico_seg": AUTO_CLOSE_SECONDS,
+        "cuentas_cerradas_activas": len(closed_accounts),
+        "aviso_discord_configurado": bool(ADMIN_DISCORD_WEBHOOK),
+    }
+
+
+@app.get(
+    "/api/v1/alerts",
+    summary="Historial de avisos a administradores",
+    tags=["IA"],
+)
+async def get_alerts(limit: int = 50):
+    """
+    Lista los bots detectados hasta ahora. Cada uno ya generó su cierre
+    automático de 5 minutos y su aviso — esta lista es solo el historial,
+    no requiere ninguna acción para que la cuenta se reabra.
+    """
+    return {
+        "count": len(pending_alerts),
+        "alerts": list(reversed(pending_alerts))[:limit],
+    }
 
 
 # ─────────────────────────────────────────────────────────────────────────────
