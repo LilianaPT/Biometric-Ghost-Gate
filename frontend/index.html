@@ -112,6 +112,9 @@
   .result.show{ display:block; }
   .result.ok{ background:var(--accent-dim); border-color:var(--accent); color:var(--accent); }
   .result.err{ background:var(--red-dim); border-color:var(--red); color:var(--red); }
+  .result.warn{ background:var(--amber-dim); border-color:var(--amber); color:var(--amber); display:flex; gap:10px; align-items:flex-start; }
+  .result.warn .warn-icon{ flex-shrink:0; font-size:16px; line-height:1; margin-top:1px; }
+  .result.warn .warn-countdown{ font-family:var(--font-mono); font-weight:600; }
 
   .account-card{
     background:var(--bg-2); border:1px solid var(--line); border-radius:10px; padding:16px;
@@ -424,6 +427,14 @@
         currentAccount = data;
         showResult(loginResult, 'ok', `Bienvenida, ${data.full_name}. Tiempo registrado: ${user_speed}s`);
         setTimeout(() => enterTransactionView(data), 500);
+      } else if (res.status === 423){
+        showWarnWithCountdown(
+          loginResult,
+          data.detail?.code === 'AI_BOT_DETECTED'
+            ? '🤖 Detectamos actividad de bot en esta cuenta.'
+            : '🔒 Esta cuenta está bloqueada temporalmente por seguridad.',
+          data.detail?.retry_after_seconds
+        );
       } else {
         showResult(loginResult, 'err', data.detail?.message || 'Credenciales inválidas.');
       }
@@ -526,6 +537,15 @@
         document.getElementById('amount').value = '';
         startTimer();
         loadAccountActivity(currentAccount.account_id);
+      } else if (res.status === 423){
+        showWarnWithCountdown(
+          txnResult,
+          data.detail?.code === 'AI_BOT_DETECTED'
+            ? '🤖 Detectamos actividad de bot en esta cuenta.'
+            : '🔒 Esta cuenta está bloqueada temporalmente por seguridad.',
+          data.detail?.retry_after_seconds
+        );
+        pushLog('TXN_BLOCKED', 'cuenta cerrada temporalmente por IA', true);
       } else {
         showResult(txnResult, 'err', data.detail?.message || 'Transferencia rechazada.');
         pushLog('TXN_FAIL', `${destination_account} rechazada`, true);
@@ -549,6 +569,35 @@
   function showResult(el, kind, text){
     el.className = `result show ${kind}`;
     el.textContent = text;
+  }
+
+  let countdownInterval = null;
+
+  function showWarnWithCountdown(el, baseMessage, retryAfterSeconds){
+    if (countdownInterval) clearInterval(countdownInterval);
+
+    el.className = 'result show warn';
+    el.innerHTML = `<span class="warn-icon">⏱</span><span>${baseMessage} Podrás intentar de nuevo en <span class="warn-countdown" id="warnCountdown"></span>.</span>`;
+
+    let restante = Math.max(0, Math.round(retryAfterSeconds || 0));
+    const countdownSpan = document.getElementById('warnCountdown');
+
+    function pintarTiempo(){
+      const m = Math.floor(restante / 60);
+      const s = restante % 60;
+      if (countdownSpan) countdownSpan.textContent = `${m}:${String(s).padStart(2, '0')}`;
+    }
+
+    pintarTiempo();
+    countdownInterval = setInterval(() => {
+      restante -= 1;
+      if (restante <= 0){
+        clearInterval(countdownInterval);
+        if (countdownSpan) countdownSpan.textContent = 'ya puedes intentar de nuevo';
+        return;
+      }
+      pintarTiempo();
+    }, 1000);
   }
 
   startTimer();

@@ -34,7 +34,7 @@ from pydantic import BaseModel, Field
 # ─────────────────────────────────────────────────────────────────────────────
 
 APP_NAME        = "BGG Banking Simulator"
-APP_VERSION     = "1.9.0"
+APP_VERSION     = "1.9.1"
 APP_DESCRIPTION = "Sandbox de simulación de login bancario — Proyecto Biometric Ghost Gate"
 
 LOG_DIR         = "logs/active"
@@ -321,6 +321,14 @@ def is_account_closed(account_id: str) -> bool:
         del closed_accounts[account_id]
         return False
     return True
+
+
+def get_remaining_close_seconds(account_id: str) -> int:
+    """Segundos exactos que faltan para que la cuenta se reabra sola."""
+    reabre_en = closed_accounts.get(account_id)
+    if reabre_en is None:
+        return 0
+    return max(0, round(reabre_en - time.time()))
 
 
 async def notify_admins(alerta: dict):
@@ -761,16 +769,20 @@ async def banking_login(payload: LoginRequest):
 
     # ── Cierre automático activo — rechaza incluso con contraseña correcta ──
     if user_data is not None and is_account_closed(user_data["account_id"]):
+        restante = get_remaining_close_seconds(user_data["account_id"])
+        minutos = restante // 60
+        segundos = restante % 60
         logger.warning(
             f"AUTH_CLOSED| user={payload.username:<20} account={user_data['account_id']} "
-            f"reason=auto_close_active"
+            f"reason=auto_close_active restante={restante}s"
         )
         raise HTTPException(
             status_code=423,
             detail={
                 "status": "error",
-                "message": "Sesión cerrada temporalmente por seguridad. Vuelve a intentar en unos minutos.",
+                "message": f"Cuenta bloqueada temporalmente por seguridad. Intenta de nuevo en {minutos} min {segundos:02d} seg.",
                 "code": "AI_SESSION_AUTO_CLOSED",
+                "retry_after_seconds": restante,
             },
         )
 
@@ -796,9 +808,10 @@ async def banking_login(payload: LoginRequest):
             status_code=423,
             detail={
                 "status": "error",
-                "message": f"Bot detectado. Sesión cerrada por {AUTO_CLOSE_SECONDS // 60} minutos y se avisó a los administradores.",
+                "message": f"Bot detectado. Tu cuenta se bloqueó por seguridad durante {AUTO_CLOSE_SECONDS // 60} minutos y se avisó a los administradores.",
                 "code": "AI_BOT_DETECTED",
                 "score": ai_result["score"],
+                "retry_after_seconds": AUTO_CLOSE_SECONDS,
             },
         )
 
@@ -894,15 +907,19 @@ async def bank_transfer(payload: TransactionRequest):
 
     # ── Cierre automático activo — rechaza incluso si los datos son válidos ──
     if is_account_closed(payload.account_id):
+        restante = get_remaining_close_seconds(payload.account_id)
+        minutos = restante // 60
+        segundos = restante % 60
         logger.warning(
-            f"TXN_CLOSED| account={payload.account_id:<15} reason=auto_close_active"
+            f"TXN_CLOSED| account={payload.account_id:<15} reason=auto_close_active restante={restante}s"
         )
         raise HTTPException(
             status_code=423,
             detail={
                 "status": "error",
-                "message": "Sesión cerrada temporalmente por seguridad. Vuelve a intentar en unos minutos.",
+                "message": f"Cuenta bloqueada temporalmente por seguridad. Intenta de nuevo en {minutos} min {segundos:02d} seg.",
                 "code": "AI_SESSION_AUTO_CLOSED",
+                "retry_after_seconds": restante,
             },
         )
 
@@ -928,9 +945,10 @@ async def bank_transfer(payload: TransactionRequest):
             status_code=423,
             detail={
                 "status": "error",
-                "message": f"Bot detectado. Sesión cerrada por {AUTO_CLOSE_SECONDS // 60} minutos y se avisó a los administradores.",
+                "message": f"Bot detectado. La cuenta se bloqueó por seguridad durante {AUTO_CLOSE_SECONDS // 60} minutos y se avisó a los administradores.",
                 "code": "AI_BOT_DETECTED",
                 "score": ai_result["score"],
+                "retry_after_seconds": AUTO_CLOSE_SECONDS,
             },
         )
 
