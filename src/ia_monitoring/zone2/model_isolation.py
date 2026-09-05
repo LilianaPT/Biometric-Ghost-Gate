@@ -7,7 +7,7 @@ Descripción: Implementación de Isolation Forest para la detección de
              Soporta entrenamiento multilog, generación de métricas de 
              evaluación, evaluación en tiempo real con auto-carga de 
              modelos ajustados y exportación de binarios (.joblib).
-VERSIÓN:     1.2.2 (Alineación de características y tipos)
+VERSIÓN:     1.3.0 (Reglas heurísticas estrictas para detección de Bots)
 =========================================================================
 """
 
@@ -42,17 +42,21 @@ class EngineIABGG:
         else:
             self.ruta_modelo = ruta_modelo
 
-        # Hiperparámetros calibrados de Isolation Forest
-        self.model = IsolationForest(contamination=0.15, random_state=42)
+        # Hiperparámetros calibrados de Isolation Forest (contaminación ajustada)
+        self.model = IsolationForest(contamination=0.20, random_state=42)
         
         # Orden estricto de características para entrenamiento e inferencia
         self.features_cols = ["latency", "user_speed", "status_code"]
         
-        # Dataset sintético de seguridad en caso de ausencia de logs
+        # Dataset sintético de respaldo calibrado con perfiles humanos y bots
         self.respaldo_datos = pd.DataFrame([
-            [150.0, 1.5, 200],
-            [300.0, 2.0, 200],
-            [50.0, 0.01, 401]
+            [150.0, 1.50, 200],  # Humano
+            [300.0, 2.10, 200],  # Humano
+            [120.0, 1.20, 200],  # Humano
+            [250.0, 0.85, 401],  # Humano (Fallo de clave)
+            [15.0,  0.01, 401],  # Bot (Ataque rápido)
+            [10.0,  0.001, 401], # Bot (Ataque ultra rápido)
+            [5.0,   0.02, 401]   # Bot (Ataque script)
         ], columns=self.features_cols)
 
     def cargar_datos_desde_log(self):
@@ -63,11 +67,7 @@ class EngineIABGG:
         archivos_encontrados = glob.glob(self.ruta_log) if "*" in self.ruta_log else ([self.ruta_log] if os.path.exists(self.ruta_log) else [])
 
         if not archivos_encontrados:
-            return pd.DataFrame({
-                'latency': [45.0, 120.0, 350.0, 50.0, 800.0, 12.0],
-                'user_speed': [1.2, 2.5, 0.05, 1.8, 0.01, 0.02],
-                'status_code': [200, 200, 401, 200, 429, 200]
-            })[self.features_cols]
+            return self.respaldo_datos[self.features_cols]
 
         registros = []
         for ruta_archivo in archivos_encontrados:
@@ -93,11 +93,7 @@ class EngineIABGG:
                 continue
 
         if not registros:
-            return pd.DataFrame({
-                'latency': [45.0, 120.0, 50.0],
-                'user_speed': [1.2, 2.5, 1.8],
-                'status_code': [200, 200, 200]
-            })[self.features_cols]
+            return self.respaldo_datos[self.features_cols]
 
         return pd.DataFrame(registros)[self.features_cols]
 
@@ -135,23 +131,33 @@ class EngineIABGG:
         return False
 
     def evaluar_transaccion(self, status_code: int, latency: float, user_speed: float):
-        # Crear DataFrame con el mismo orden exacto de columnas que en el entrenamiento
+        """
+        Evalúa una petición combinando la inferencia del Isolation Forest 
+        con reglas de umbral biométrico estricto.
+        """
+        # Intentar cargar el modelo actualizado si existe
+        self.cargar_modelo_exportado()
+
         features = pd.DataFrame([{
             'latency': float(latency),
             'user_speed': float(user_speed),
             'status_code': int(status_code)
         }])[self.features_cols]
 
-        # Inferencia con la instancia cargada
+        # Inferencia del modelo ML
         prediccion = self.model.predict(features)[0]  # -1 para anomalía, 1 para normal
         score = float(self.model.decision_function(features)[0])
 
-        bloquear = True if prediccion == -1 else False
+        # Regla de seguridad biométrica: Velocidad de tecleo no humana (< 0.05s) o latencia ultra baja en fallos
+        es_velocidad_bot = float(user_speed) < 0.05
+        es_rafaga_fallos = (int(status_code) == 401) and (float(latency) < 25.0)
+
+        bloquear = True if (prediccion == -1 or es_velocidad_bot or es_rafaga_fallos) else False
 
         return {
             "resultado": "ANOMALIA_DETECTADA_BLOQUEAR" if bloquear else "ACCESO_PERMITIDO",
             "bloquear": bloquear,
             "codigo_http": 403 if bloquear else 200,
-            "mensaje": "ALERTA DE SEGURIDAD: Tráfico automatizado / Bot detectado." if bloquear else "Petición legítima.",
+            "mensaje": "ALERTA DE SEGURIDAD: Tráfico automatizado / Bot detectado por BGG." if bloquear else "Petición legítima.",
             "anomaly_score": score
         }
