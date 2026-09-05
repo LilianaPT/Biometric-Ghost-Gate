@@ -117,4 +117,4 @@ def execute_login_and_transfer(username, password, login_data=None):
         print(f"⚠️ Error ejecutando transferencia: {e}\n")
 
 if __name__ == "__main__":
-    run_api_bot()git add src/ia_monitoring/test_bot_simulator.py
+    run_api_bot()
