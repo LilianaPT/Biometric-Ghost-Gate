@@ -7,7 +7,7 @@ Descripción: Implementación de Isolation Forest para la detección de
              Soporta entrenamiento multilog, generación de métricas de 
              evaluación, evaluación en tiempo real con auto-carga de 
              modelos ajustados y exportación de binarios (.joblib).
-VERSIÓN:     1.3.0 (Reglas heurísticas estrictas para detección de Bots)
+VERSIÓN:     1.4.0 (Umbral biométrico alineado con scripts/bots < 0.15s)
 =========================================================================
 """
 
@@ -148,8 +148,9 @@ class EngineIABGG:
         prediccion = self.model.predict(features)[0]  # -1 para anomalía, 1 para normal
         score = float(self.model.decision_function(features)[0])
 
-        # Regla de seguridad biométrica: Velocidad de tecleo no humana (< 0.05s) o latencia ultra baja en fallos
-        es_velocidad_bot = float(user_speed) < 0.05
+        # Regla de seguridad biométrica ajustada: 
+        # Si la velocidad es menor a 0.15s (rango de bot de 0.01s a 0.30s), se considera inhumana/bot.
+        es_velocidad_bot = float(user_speed) < 0.15
         es_rafaga_fallos = (int(status_code) == 401) and (float(latency) < 25.0)
 
         bloquear = True if (prediccion == -1 or es_velocidad_bot or es_rafaga_fallos) else False
