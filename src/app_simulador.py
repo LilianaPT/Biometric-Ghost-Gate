@@ -34,7 +34,7 @@ from pydantic import BaseModel, Field
 # ─────────────────────────────────────────────────────────────────────────────
 
 APP_NAME        = "BGG Banking Simulator"
-APP_VERSION     = "1.9.1"
+APP_VERSION     = "1.9.2"
 APP_DESCRIPTION = "Sandbox de simulación de login bancario — Proyecto Biometric Ghost Gate"
 
 LOG_DIR         = "logs/active"
@@ -48,8 +48,8 @@ LATENCY_MAX_SEC = 1.5
 # Escenario B (Sandbox): valor aleatorio que simula comportamiento humano real.
 # Escenario A (Producción futura): vendrá del payload del frontend.
 # Rango típico humano: 2s (usuario experto) a 15s (usuario lento/distraído)
-USER_SPEED_MIN_SEC = 2.0
-USER_SPEED_MAX_SEC = 15.0
+USER_SPEED_MIN_SEC = 0.01
+USER_SPEED_MAX_SEC = 0.3
 
 # ─────────────────────────────────────────────────────────────────────────────
 # API DE IA (Angela) — Servicio externo de detección de bots
@@ -663,13 +663,19 @@ async def simulate_network_latency() -> float:
 
 def simulate_user_speed() -> float:
     """
-    Simula el tiempo que un usuario humano tarda en rellenar el formulario
-    de login antes de presionar el botón (Escenario B — Sandbox).
+    Genera un tiempo de interacción cuando el cliente NO mandó user_speed
+    en el payload (Escenario B).
 
-    Distribución: uniforme entre USER_SPEED_MIN_SEC y USER_SPEED_MAX_SEC.
+    IMPORTANTE (corregido): el Frontend Web real (Escenario A) SIEMPRE manda
+    user_speed medido de verdad. La única forma de que este payload llegue
+    sin user_speed es que la petición venga de un script/bot que se saltó
+    la interfaz — por definición, NO es un humano tecleando. Por eso este
+    valor debe reflejar velocidad típica de automatización (muy rápida),
+    no un tiempo humano plausible — de lo contrario se le "disfraza" de
+    humano al bot justo antes de mandarlo a evaluar con la IA.
 
-    Escenario A (producción futura): este valor vendrá del payload del
-    frontend como campo 'user_speed' y se eliminará esta función.
+    Distribución: uniforme entre USER_SPEED_MIN_SEC y USER_SPEED_MAX_SEC
+    (0.01s – 0.3s: rango típico de un script, no de una persona escribiendo).
 
     Retorna el tiempo simulado en segundos (float con 2 decimales).
     """
