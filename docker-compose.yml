@@ -44,7 +44,7 @@ services:
       # URL de la API de Angela. Usa host.docker.internal (no localhost):
       # el contenedor y el api.py de Angela NO comparten red por defecto.
       # Ajusta el puerto al que Angela realmente use (aquí: 8001).
-      - AI_API_URL=http://host.docker.internal:8001/api/v1/predict
+      - AI_API_URL=http://host.docker.internal:8002/api/v1/predict
       # - ADMIN_DISCORD_WEBHOOK=https://discord.com/api/webhooks/tu-url-aqui
 
     # ── Redes — necesario para que host.docker.internal funcione en Linux ──
