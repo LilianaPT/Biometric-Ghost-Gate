@@ -7,7 +7,7 @@ Descripción: Implementación de Isolation Forest para la detección de
              Soporta entrenamiento multilog, generación de métricas de 
              evaluación, evaluación en tiempo real con auto-carga de 
              modelos ajustados y exportación de binarios (.joblib).
-VERSIÓN:     1.2.2 (Corregida alineación de columnas y tipos)
+VERSIÓN:     1.2.2 (Alineación de características y tipos)
 =========================================================================
 """
 
@@ -45,10 +45,10 @@ class EngineIABGG:
         # Hiperparámetros calibrados de Isolation Forest
         self.model = IsolationForest(contamination=0.15, random_state=42)
         
-        # Columnas estándar y orden estricto de aprendizaje
+        # Orden estricto de características para entrenamiento e inferencia
         self.features_cols = ["latency", "user_speed", "status_code"]
         
-        # Dataset sintético de seguridad corregido
+        # Dataset sintético de seguridad en caso de ausencia de logs
         self.respaldo_datos = pd.DataFrame([
             [150.0, 1.5, 200],
             [300.0, 2.0, 200],
@@ -67,7 +67,7 @@ class EngineIABGG:
                 'latency': [45.0, 120.0, 350.0, 50.0, 800.0, 12.0],
                 'user_speed': [1.2, 2.5, 0.05, 1.8, 0.01, 0.02],
                 'status_code': [200, 200, 401, 200, 429, 200]
-            })
+            })[self.features_cols]
 
         registros = []
         for ruta_archivo in archivos_encontrados:
@@ -97,7 +97,7 @@ class EngineIABGG:
                 'latency': [45.0, 120.0, 50.0],
                 'user_speed': [1.2, 2.5, 1.8],
                 'status_code': [200, 200, 200]
-            })
+            })[self.features_cols]
 
         return pd.DataFrame(registros)[self.features_cols]
 
@@ -142,7 +142,7 @@ class EngineIABGG:
             'status_code': int(status_code)
         }])[self.features_cols]
 
-        # Corregido: uso de self.model (antes decia self.modelo)
+        # Inferencia con la instancia cargada
         prediccion = self.model.predict(features)[0]  # -1 para anomalía, 1 para normal
         score = float(self.model.decision_function(features)[0])
 
