@@ -41,8 +41,17 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - TZ=UTC                         # forzar zona horaria UTC en el contenedor
-      - ADMIN_DISCORD_WEBHOOK=https://discord.com/api/webhooks/1544141295809994783/7PDSK7VllV4vl3dqnMOiT1IGjXur5uhRH40-pPK0J5pFN0PI39rwyMZR4lBeqmWnN47n
-      - AI_API_URL=http://localhost:800/api/v1/predict
+      # URL de la API de Angela. Usa host.docker.internal (no localhost):
+      # el contenedor y el api.py de Angela NO comparten red por defecto.
+      # Ajusta el puerto al que Angela realmente use (aquí: 8001).
+      - AI_API_URL=http://host.docker.internal:8001/api/v1/predict
+      # - ADMIN_DISCORD_WEBHOOK=https://discord.com/api/webhooks/tu-url-aqui
+
+    # ── Redes — necesario para que host.docker.internal funcione en Linux ──
+    # En Docker Desktop (Mac/Windows) esto viene incluido; en Linux (la VM)
+    # hay que declararlo explícitamente o la resolución de nombre falla.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
     # ── Recursos (opcional pero recomendado para sandbox controlado) ───────
     deploy:

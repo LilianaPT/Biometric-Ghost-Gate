@@ -34,7 +34,7 @@ from pydantic import BaseModel, Field
 # ─────────────────────────────────────────────────────────────────────────────
 
 APP_NAME        = "BGG Banking Simulator"
-APP_VERSION     = "1.9.2"
+APP_VERSION     = "1.9.3"
 APP_DESCRIPTION = "Sandbox de simulación de login bancario — Proyecto Biometric Ghost Gate"
 
 LOG_DIR         = "logs/active"
@@ -49,7 +49,10 @@ LATENCY_MAX_SEC = 1.5
 # Escenario A (Producción futura): vendrá del payload del frontend.
 # Rango típico humano: 2s (usuario experto) a 15s (usuario lento/distraído)
 USER_SPEED_MIN_SEC = 0.01
-USER_SPEED_MAX_SEC = 0.3
+USER_SPEED_MAX_SEC = 0.14
+# ⚠️ Acoplado al umbral de model_isolation.py (Angela): "es_velocidad_bot = user_speed < 0.15".
+# Este máximo DEBE quedarse por debajo de ese umbral siempre — si Angela lo
+# cambia, hay que actualizar este valor también para no perder detecciones.
 
 # ─────────────────────────────────────────────────────────────────────────────
 # API DE IA (Angela) — Servicio externo de detección de bots
@@ -266,7 +269,7 @@ def interpret_ai_result(resultado: dict) -> dict:
     }
 
 
-async def assess_request(user_speed: float, network_delay: float, has_geolocation: bool) -> dict:
+async def assess_request(user_speed: float, network_delay: float, has_geolocation: bool, status_code: int = 200) -> dict:
     """
     Llama a la API externa de Angela (POST /api/v1/predict) para clasificar
     el intento actual. Si el servicio no responde a tiempo o falla, el login
@@ -282,7 +285,7 @@ async def assess_request(user_speed: float, network_delay: float, has_geolocatio
     global ai_api_status
 
     payload = {
-        "status_code": 200,
+        "status_code": status_code,
         "latency": round(network_delay * 1000, 2),   # segundos → milisegundos
         "user_speed": user_speed,                     # ya está en segundos, igual que ella lo espera
     }
@@ -675,7 +678,7 @@ def simulate_user_speed() -> float:
     humano al bot justo antes de mandarlo a evaluar con la IA.
 
     Distribución: uniforme entre USER_SPEED_MIN_SEC y USER_SPEED_MAX_SEC
-    (0.01s – 0.3s: rango típico de un script, no de una persona escribiendo).
+    (0.01s – 0.14s: siempre por debajo del umbral de bot de Angela, 0.15s).
 
     Retorna el tiempo simulado en segundos (float con 2 decimales).
     """
@@ -792,9 +795,15 @@ async def banking_login(payload: LoginRequest):
             },
         )
 
+    # ── Determinar si las credenciales son válidas ANTES de llamar a la IA,
+    # así se le manda el status_code real (200/401) — necesario para que
+    # la regla de "ráfaga de fallos" de Angela (401 + latencia baja) funcione.
+    credenciales_validas = user_data is not None and user_data["password"] == payload.password
+    status_code_real = 200 if credenciales_validas else 401
+
     # ── Clasificación en tiempo real con la API de Angela ───────────────
     has_geo = payload.latitude is not None and payload.longitude is not None
-    ai_result = await assess_request(user_speed, delay_aplicado, has_geo)
+    ai_result = await assess_request(user_speed, delay_aplicado, has_geo, status_code=status_code_real)
 
     logger.info(
         f"AI_PREDICT | user={payload.username:<20} "
@@ -823,7 +832,7 @@ async def banking_login(payload: LoginRequest):
 
     # ── Validación mock de credenciales ───────────────────────────────────
     # Usuario no existe O contraseña incorrecta (mismo mensaje: evita user enumeration)
-    if user_data is None or user_data["password"] != payload.password:
+    if not credenciales_validas:
         logger.warning(
             f"AUTH_FAIL| user={payload.username:<20} "
             f"reason=invalid_credentials "
