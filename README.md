@@ -27,10 +27,10 @@ anomalías.
 ## 👥 Equipo AQ Tech
 
 * **Liliana Pantoja** — Lead Developer & Arquitectura. Backend, infraestructura del sandbox y orquestación general del proyecto.
-* **Evelyn** — Ingeniería de Kernel & Redes. Despliegue en VM, monitoreo de tráfico y base para la futura interceptación eBPF.
-* **Angela** — IA & Monitoreo Predictivo. Modelo de detección de anomalías (Isolation Forest) y su API de inferencia.
-* **Mar** — Marketing & Estrategia de Marca. Identidad de AQ Tech y posicionamiento de BGG en el sector Fintech.
-* **Avigayl** — Legal & Compliance. Cumplimiento con LFPDPPP y estándares regulatorios de la CNBV.
+* **Karla Evelyn Morales Vega** — Ingeniería de Kernel & Redes. Despliegue en VM, monitoreo de tráfico y base para la futura interceptación eBPF.
+* **Angela Joselin Olivares Camargo** — IA & Monitoreo Predictivo. Modelo de detección de anomalías (Isolation Forest) y su API de inferencia.
+* **Mar Martinez** — Marketing & Estrategia de Marca. Identidad de AQ Tech y posicionamiento de BGG en el sector Fintech.
+* **Avigayl Gonzalez** — Legal & Compliance. Cumplimiento con LFPDPPP y estándares regulatorios de la CNBV.
 
 ---
 
